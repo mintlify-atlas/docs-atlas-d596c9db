@@ -1,0 +1,169 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Proletariat",
+  "projectDescription": "Agent orchestration platform for AI labor - Spin up workers on demand for multi-agent development",
+  "theme": "aspen",
+  "primaryColor": "#040404",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/overview",
+              "concepts/workspace",
+              "concepts/tickets",
+              "concepts/agents",
+              "concepts/execution-modes",
+              "concepts/workflows"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/getting-started",
+              "guides/creating-tickets",
+              "guides/spawning-agents",
+              "guides/parallel-agents",
+              "guides/using-themes",
+              "guides/json-mode"
+            ]
+          },
+          {
+            "group": "MCP Server",
+            "pages": [
+              "mcp/overview",
+              "mcp/setup",
+              "mcp/tools"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/docker-execution",
+              "advanced/templates",
+              "advanced/integrations",
+              "advanced/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Command Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "commands/overview"
+            ]
+          },
+          {
+            "group": "Workspace",
+            "pages": [
+              "commands/workspace/init",
+              "commands/workspace/new",
+              "commands/workspace/list",
+              "commands/workspace/use"
+            ]
+          },
+          {
+            "group": "Tickets",
+            "pages": [
+              "commands/ticket/create",
+              "commands/ticket/list",
+              "commands/ticket/view",
+              "commands/ticket/edit",
+              "commands/ticket/move",
+              "commands/ticket/delete"
+            ]
+          },
+          {
+            "group": "Work",
+            "pages": [
+              "commands/work/start",
+              "commands/work/spawn",
+              "commands/work/complete",
+              "commands/work/ready"
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "commands/agent/list",
+              "commands/agent/shell",
+              "commands/agent/staff",
+              "commands/agent/themes"
+            ]
+          },
+          {
+            "group": "Board & Projects",
+            "pages": [
+              "commands/board/view",
+              "commands/project/create",
+              "commands/project/list",
+              "commands/epic/create"
+            ]
+          },
+          {
+            "group": "Execution",
+            "pages": [
+              "commands/execution/list",
+              "commands/execution/logs",
+              "commands/execution/stop"
+            ]
+          },
+          {
+            "group": "Docker",
+            "pages": [
+              "commands/docker/list",
+              "commands/docker/shell",
+              "commands/docker/logs"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Isolated agent workspaces with git branches",
+    "Docker containerization for secure execution",
+    "Persistent tmux sessions",
+    "Built-in MCP server with 100+ tools",
+    "Ticket-based structured workflow",
+    "Parallel multi-agent spawning",
+    "Themed agent naming (billionaires, toyotas, companies)",
+    "JSON mode for AI agent integration",
+    "Project and epic management",
+    "Interactive and flag-based CLI modes"
+  ],
+  "publicApiSurface": [
+    "prlt new",
+    "prlt ticket create",
+    "prlt work start",
+    "prlt work spawn",
+    "prlt agent list",
+    "prlt agent themes",
+    "prlt board",
+    "prlt execution list",
+    "prlt docker shell",
+    "prlt mcp-server",
+    "prlt project create",
+    "prlt epic create",
+    "prlt spec create",
+    "prlt action create",
+    "prlt pr create",
+    "prlt whoami"
+  ]
+}
