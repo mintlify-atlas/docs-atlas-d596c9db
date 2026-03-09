@@ -1,0 +1,398 @@
+---
+title: Using Themes
+description: Customize agent naming with built-in and custom themes
+---
+
+Themes control how agents are named in Proletariat. Choose from built-in themes or create your own.
+
+## Why Themes?
+
+Agent names make your workspace more:
+- **Memorable**: "bezos" is easier than "agent-7"
+- **Fun**: "Finally, they work for us" 😄
+- **Organized**: Themes help distinguish agent types
+- **Scalable**: Built-in themes have 50+ names each
+
+## Built-in Themes
+
+Proletariat includes three built-in themes:
+
+### Billionaires
+
+**The ultra-wealthy work for you**
+
+```bash
+prlt agent themes set billionaires
+```
+
+Example names:
+- Staff agents: `bezos`, `musk`, `gates`, `zuck`
+- Ephemeral agents: `bold-bezos-1`, `keen-gates-2`
+
+<Note>
+**Why billionaires?** Finally, they work for us. This is the default theme because it's darkly humorous and memorable.
+</Note>
+
+**Full list of billionaire names:**
+
+altman, andreesen, ballmer, benioff, bezos, branson, brin, buffett, chesky, collison, cook, dalio, dario, dell, dorsey, durov, ellison, fink, gates, hastings, hoffman, horowitz, huang, jobs, kalanick, khosla, knight, levinson, ma, mcnealy, musk, nadella, neumann, omidyar, page, parker, pichai, sandberg, schmidt, schultz, siebel, silbermann, spiegel, sweeney, systrom, thiel, wozniak, yang, zuck
+
+### Toyotas
+
+**Reliable workhorses for your project**
+
+```bash
+prlt agent themes set toyotas
+```
+
+Example names:
+- Staff agents: `camry`, `supra`, `tacoma`, `landcruiser`
+- Ephemeral agents: `bold-camry-1`, `keen-supra-2`
+
+<Tip>
+Toyota theme is great for teams that prefer non-human names or want automotive references.
+</Tip>
+
+**Full list of Toyota models:**
+
+4runner, avalon, camry, celica, corolla, cressida, fj40, fj60, fj80, highlander, hilux, landcruiser, mr2, prius, rav4, sequoia, sienna, supra, tacoma, tercel, tundra, venza, yaris, auris, belta, brevis, caldina, carina, century, chaser, coaster, corona, cresta, crown, dyna, estima, etios, fortuner, granvia, harrier, innova, ipsum, kluger, levin, lite, lucida, mark2, matrix, mirai, noah, paseo, picnic, platz, previa, premio, probox, raize, rukus, sera, soarer, solara, starlet, surf, tarago, trueno, urban, verso, vios, vista, vitz, wish
+
+### Companies
+
+**Your corporate portfolio**
+
+```bash
+prlt agent themes set companies
+```
+
+Example names:
+- Staff agents: `stripe`, `vercel`, `linear`, `notion`
+- Ephemeral agents: `bold-stripe-1`, `keen-vercel-2`
+
+**Full list of companies:**
+
+adobe, airbnb, amazon, apple, atlassian, cisco, coinbase, databricks, discord, dropbox, figma, github, google, intel, meta, microsoft, netflix, notion, nvidia, openai, oracle, palantir, salesforce, shopify, slack, snowflake, spotify, square, stripe, tesla, twilio, twitter, uber, vercel, zoom, airtable, algolia, asana, auth0, brex, canva, carta, checkout, clickup, cloudera, contentful, datadog, deel, docusign, doordash, elastic, fastly, fivetran, gitlab, gusto, hashicorp, hubspot, instacart, klarna, launchdark, linear, loom, lyft, mailchimp, miro, monday, mongo, netlify, okta, pagerduty, plaid, postman, reddit, retool, revolut, rippling, robinhood, segment, sentry, supabase, toast, twitch, webflow, wiz, workday, zendesk, zscaler
+
+## Managing Themes
+
+### List Themes
+
+View all available themes:
+
+```bash
+prlt agent themes list
+```
+
+Output:
+
+```
+Agent Themes
+
+  Billionaires [built-in]
+    ID: billionaires
+    The ultra-wealthy work for you
+    Names: 53 available, 0 in use
+
+  Toyota Garage [built-in]
+    ID: toyotas
+    Reliable workhorses for your project
+    Names: 72 available, 0 in use
+
+  Company Portfolio [built-in]
+    ID: companies
+    Your corporate portfolio
+    Names: 96 available, 0 in use
+```
+
+### Set Active Theme
+
+Change the active theme:
+
+```bash
+prlt agent themes set toyotas
+```
+
+New agents will use names from the selected theme.
+
+<Note>
+Changing theme doesn't rename existing agents. Only new agents use the new theme.
+</Note>
+
+### View Theme Names
+
+See all names in a theme:
+
+```bash
+prlt agent themes list --json | jq -r '.[] | select(.id == "billionaires") | .availableNames'
+```
+
+## Custom Themes
+
+Create your own themes:
+
+<Steps>
+
+<Step title="Create the theme">
+
+```bash
+prlt agent themes create mytheme --name "My Theme" --description "My custom agent names"
+```
+
+</Step>
+
+<Step title="Add names">
+
+```bash
+prlt agent themes add-names mytheme
+```
+
+You'll be prompted to enter names one by one. Press Ctrl+D when done.
+
+Or add from a file:
+
+```bash
+cat names.txt | prlt agent themes add-names mytheme
+```
+
+Example `names.txt`:
+
+```text
+alpha
+bravo
+charlie
+delta
+echo
+foxtrot
+```
+
+</Step>
+
+<Step title="Set as active">
+
+```bash
+prlt agent themes set mytheme
+```
+
+</Step>
+
+</Steps>
+
+### Theme Ideas
+
+<AccordionGroup>
+
+<Accordion title="Military phonetic alphabet">
+  alpha, bravo, charlie, delta, echo, foxtrot, golf, hotel, india, juliet, kilo, lima, mike, november, oscar, papa, quebec, romeo, sierra, tango, uniform, victor, whiskey, xray, yankee, zulu
+</Accordion>
+
+<Accordion title="Greek gods">
+  zeus, hera, poseidon, demeter, athena, apollo, artemis, ares, hephaestus, aphrodite, hermes, dionysus, hades, persephone, hestia
+</Accordion>
+
+<Accordion title="Star Wars characters">
+  luke, leia, han, chewie, yoda, obiwan, anakin, padme, rey, finn, poe, kylo, vader, palpatine, ahsoka, mando, grogu
+</Accordion>
+
+<Accordion title="Superheroes">
+  batman, superman, wonderwoman, flash, aquaman, cyborg, spiderman, ironman, thor, hulk, blackwidow, hawkeye, captainamerica
+</Accordion>
+
+<Accordion title="Planets and moons">
+  mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto, luna, titan, europa, io, ganymede, callisto, enceladus, triton
+</Accordion>
+
+</AccordionGroup>
+
+## Agent Naming Rules
+
+### Staff Agents
+
+**Use theme names directly:**
+
+```bash
+prlt agent staff add bezos
+```
+
+Agent is named `bezos`.
+
+### Ephemeral Agents
+
+**Prefix with adjective:**
+
+When creating ephemeral agents:
+
+```bash
+prlt work start TKT-042 --ephemeral
+```
+
+Agent is auto-named like:
+- `bold-bezos-1`
+- `keen-gates-2`
+- `wise-musk-3`
+
+**Format:** `<adjective>-<theme-name>-<number>`
+
+<Note>
+The number suffix (e.g., `-1`) will be removed in a future version. Names will be just `bold-bezos`, `keen-gates`, etc.
+</Note>
+
+### Name Validation
+
+Agent names must:
+- Start with letter or number
+- Contain only: `a-z`, `A-Z`, `0-9`, `-`, `_`
+- Be unique (case-insensitive)
+
+Invalid names:
+- `my agent` (spaces not allowed)
+- `agent@123` (@ not allowed)
+- `_private` (can't start with underscore)
+
+## Theme Selection During Setup
+
+When running `prlt new`, you'll be prompted to choose a theme:
+
+```
+? Select agent naming theme:
+  › Billionaires - The ultra-wealthy work for you
+    Toyota Garage - Reliable workhorses
+    Company Portfolio - Your corporate portfolio
+    Custom... - Create your own
+```
+
+This sets the workspace default theme.
+
+## Changing Themes
+
+### Switch Themes
+
+```bash
+prlt agent themes set companies
+```
+
+**What happens:**
+- ✅ New agents use new theme
+- ✅ Old agents keep their names
+- ✅ Theme setting is saved to workspace
+
+### Rename Existing Agents
+
+Themes don't auto-rename agents. To rename:
+
+```bash
+# Remove old agent
+prlt agent staff remove bezos
+
+# Add new agent with desired name
+prlt agent staff add stripe
+```
+
+<Warning>
+Removing an agent deletes its workspace. Back up any uncommitted work first.
+</Warning>
+
+## Theme Exhaustion
+
+**What if all names are taken?**
+
+When all theme names are in use:
+- Ephemeral agents append numbers: `bold-bezos-4`
+- Staff agents require manual names
+- Consider adding more names to theme
+- Or create additional custom theme
+
+**Check availability:**
+
+```bash
+prlt agent themes list
+```
+
+Shows available vs. in-use names per theme.
+
+## JSON Mode
+
+Use `--json` for scripting:
+
+```bash
+prlt agent themes list --json
+```
+
+Returns:
+
+```json
+[
+  {
+    "id": "billionaires",
+    "name": "billionaires",
+    "displayName": "Billionaires",
+    "description": "The ultra-wealthy work for you",
+    "builtin": true,
+    "availableNames": 53,
+    "inUse": 0,
+    "totalNames": 53
+  }
+]
+```
+
+## Best Practices
+
+<AccordionGroup>
+
+<Accordion title="Choose theme at setup">
+  Pick your theme during `prlt new`. Changing later doesn't rename existing agents.
+</Accordion>
+
+<Accordion title="Keep it fun">
+  Themes make your workspace more enjoyable. Don't stress about being professional—embrace the fun.
+</Accordion>
+
+<Accordion title="Use descriptive themes for teams">
+  If sharing workspace with a team, choose themes that resonate with everyone.
+</Accordion>
+
+<Accordion title="Create project-specific themes">
+  For domain-specific projects, create custom themes that match your context (e.g., `planets` for space project).
+</Accordion>
+
+<Accordion title="Add plenty of names">
+  If creating custom themes, add at least 20-30 names to avoid exhaustion.
+</Accordion>
+
+</AccordionGroup>
+
+## Examples
+
+### List all available billionaire names
+
+```bash
+prlt agent themes list --json | jq -r '.[] | select(.id == "billionaires")'
+```
+
+### Create NASA-themed workspace
+
+```bash
+prlt agent themes create nasa --name "NASA Missions" --description "Space missions"
+echo -e "apollo\ngemini\nmercury\nvoyager\ncassini\njuno\nperseverance\ncuriosity\nopportunity\nspirit" | \
+  prlt agent themes add-names nasa
+prlt agent themes set nasa
+```
+
+### Count agents per theme
+
+```bash
+prlt agent list --json | jq 'group_by(.theme) | map({theme: .[0].theme, count: length})'
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="JSON Mode" icon="code" href="/guides/json-mode">
+Integrate Proletariat with AI agents
+</Card>
+
+<Card title="Agents Concept" icon="robot" href="/concepts/agents">
+Deep dive into agent types and architecture
+</Card>
+
+</CardGroup>

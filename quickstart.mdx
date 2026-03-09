@@ -1,80 +1,388 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Get up and running with Proletariat in 5 minutes
 ---
 
-## Get started in three steps
+This guide walks you through creating your first workspace, ticket, and spawning an AI agent to do work.
 
-Get your documentation site running locally and make your first customization.
+## Overview
 
-### Step 1: Set up your local environment
+Proletariat orchestrates AI agents to work on your codebase. Here's the basic workflow:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+1. **Create an HQ** - Your workspace that manages repos, agents, and tickets
+2. **Create tickets** - Define work with structured requirements
+3. **Spawn agents** - Launch AI workers that create branches, write code, and open PRs
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  Make sure you've completed the [installation](/installation) and authenticated with `claude login` before continuing.
 </Note>
+
+## Create Your First HQ
+
+An HQ (headquarters) is your workspace for managing repositories, agents, and projects.
+
+<Steps>
+  <Step title="Run the setup command">
+    ```bash
+    prlt new
+    ```
+
+    This starts an interactive setup wizard.
+  </Step>
+
+  <Step title="Configure your HQ">
+    The wizard will prompt you for:
+
+    - **HQ name**: Choose a name for your workspace (e.g., `my-project`)
+    - **Location**: Where to create the HQ (defaults to `./{name}-hq`)
+    - **Agent theme**: Choose how agents are named:
+      - `billionaires` - Tech founders like `musk`, `gates`, `bezos` (default)
+      - `toyotas` - Toyota models like `camry`, `supra`, `tacoma`
+      - `companies` - Tech companies like `stripe`, `vercel`, `linear`
+    - **Initial agents**: Add staff agents (optional)
+    - **Repositories**: Add existing repos or clone new ones
+    - **PMO setup**: Initialize project management structure
+  </Step>
+
+  <Step title="Complete setup">
+    Proletariat creates your HQ structure:
+
+    ```
+    my-project-hq/
+    ├── .proletariat/
+    │   └── workspace.db        # State database
+    ├── repos/                  # Your repositories
+    └── agents/                 # Agent workspaces
+        ├── staff/              # Named agents
+        └── temp/               # Ephemeral agents
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  The billionaires theme is popular - finally, they work for us!
+</Tip>
+
+## Create Your First Ticket
+
+Tickets provide structured context for agents. They include requirements, acceptance criteria, and priority.
+
+<Steps>
+  <Step title="Create a ticket">
+    ```bash
+    prlt ticket create --title "Add OAuth authentication" --category feature
+    ```
+
+    <Note>
+      You can also run `prlt ticket create` without flags for an interactive prompt.
+    </Note>
+  </Step>
+
+  <Step title="Add details (optional)">
+    Create a more detailed ticket with priority and description:
+
+    ```bash
+    prlt ticket create \
+      --title "Add OAuth authentication" \
+      --description "Implement Google and GitHub OAuth login" \
+      --priority P1 \
+      --category feature
+    ```
+  </Step>
+
+  <Step title="View your ticket">
+    ```bash
+    prlt ticket view TKT-001
+    ```
+
+    Or see all tickets:
+
+    ```bash
+    prlt ticket list
+    ```
+  </Step>
+</Steps>
+
+### Ticket Categories
+
+Common categories include:
+- `feature` - New functionality
+- `bug` - Bug fixes
+- `refactor` - Code improvements
+- `test` - Testing work
+- `docs` - Documentation
+
+## Spawn Your First Agent
+
+Now comes the magic - spawn an AI agent to work on your ticket.
+
+<Steps>
+  <Step title="Start the spawn wizard">
+    ```bash
+    prlt work spawn
+    ```
+
+    This launches an interactive menu.
+  </Step>
+
+  <Step title="Select tickets">
+    Choose one or more tickets to work on. Tickets are grouped by priority (P0, P1, P2, etc.).
+  </Step>
+
+  <Step title="Choose environment">
+    Select where the agent runs:
+
+    - **Docker** - Fully isolated in a container (recommended for safety)
+    - **Host** - Runs directly on your machine (faster, less isolation)
+  </Step>
+
+  <Step title="Select action">
+    Choose what the agent should do:
+
+    - `implement` - Write code to complete the ticket
+    - `groom` - Refine requirements and add acceptance criteria
+    - `review` - Review existing code for issues
+    - `custom` - Provide your own prompt
+  </Step>
+
+  <Step title="Agent starts working">
+    The agent:
+    1. Creates a new branch (e.g., `feat/TKT-001-oauth`)
+    2. Sets up an isolated workspace
+    3. Reads the ticket requirements
+    4. Writes code and commits changes
+    5. Opens a pull request
+  </Step>
+</Steps>
+
+### Spawn Specific Tickets
+
+Skip the interactive menu by specifying tickets directly:
+
+```bash
+prlt work spawn TKT-001 --action implement --mode docker
+```
+
+### Spawn Multiple Tickets
+
+Work on multiple tickets in parallel:
+
+```bash
+prlt work spawn TKT-001 TKT-002 TKT-003
+```
+
+Each agent works in its own isolated branch - no conflicts!
+
+<Warning>
+  Parallel execution depends on your machine resources. 50+ concurrent agents is achievable with sufficient CPU and RAM.
+</Warning>
+
+## Monitor Agent Progress
+
+While agents work, you can monitor their progress.
+
+### View Running Agents
+
+```bash
+prlt execution list
+```
+
+Shows all active agents with their tickets, status, and runtime.
+
+### Check the Board
+
+```bash
+prlt board
+```
+
+Displays a Kanban-style board with tickets organized by column (Backlog, In Progress, Review, Done).
+
+### Watch in Real-Time
+
+```bash
+prlt board watch
+```
+
+Live updates as agents move tickets through workflow.
+
+### View Agent Logs
+
+```bash
+prlt execution logs <agent-name>
+```
+
+See detailed output from a specific agent.
+
+## Execution Modes
+
+### Environment
+
+Control where agents run:
+
+<CodeGroup>
+  ```bash Docker (default)
+  prlt work spawn TKT-001
+  # Runs in isolated Docker container
+  ```
+
+  ```bash Host
+  prlt work spawn TKT-001 --run-on-host
+  # Runs directly on your machine (faster)
+  ```
+</CodeGroup>
+
+### Display Mode
+
+Control how you see agent work:
+
+<CodeGroup>
+  ```bash Terminal (new tab)
+  prlt work spawn TKT-001 --display terminal
+  # Opens new terminal tab to watch agent
+  ```
+
+  ```bash Background (detached)
+  prlt work spawn TKT-001 --display background
+  # Agent works in background, reattach later
+  ```
+</CodeGroup>
+
+### Permission Mode
+
+Control agent autonomy:
+
+<CodeGroup>
+  ```bash Safe (default)
+  prlt work spawn TKT-001
+  # Agent asks permission for operations
+  ```
+
+  ```bash YOLO (autonomous)
+  prlt work spawn TKT-001 --skip-permissions
+  # Agent runs with full autonomy (safe in Docker)
+  ```
+</CodeGroup>
+
+<Tip>
+  Combine Docker + YOLO for fully autonomous agents that are safely sandboxed.
+</Tip>
+
+## Review and Merge
+
+When an agent completes work:
+
+<Steps>
+  <Step title="Agent opens PR">
+    The agent creates a pull request on GitHub with:
+    - All code changes
+    - Commit messages
+    - PR description referencing the ticket
+  </Step>
+
+  <Step title="Review the changes">
+    Review the PR on GitHub as you would any other PR:
+    - Check code quality
+    - Verify requirements are met
+    - Request changes if needed
+  </Step>
+
+  <Step title="Merge or revise">
+    - **Merge** if the work looks good
+    - **Request changes** and the agent can revise:
+      ```bash
+      prlt work revise TKT-001 --feedback "Add error handling"
+      ```
+  </Step>
+</Steps>
+
+## Common Workflows
+
+### Parallel Feature Development
+
+Work on multiple features simultaneously:
+
+```bash
+# Create tickets
+prlt ticket create --title "Add OAuth" --category feature
+prlt ticket create --title "Add rate limiting" --category feature
+prlt ticket create --title "Add notifications" --category feature
+
+# Spawn all three in parallel
+prlt work spawn TKT-001 TKT-002 TKT-003 --mode docker
+
+# Watch progress
+prlt board watch
+```
+
+### Bug Bash
+
+Fix multiple bugs at once:
+
+```bash
+# Spawn all bugs in the Backlog
+prlt work spawn --all --column Backlog --category bug
+```
+
+### Grooming Session
+
+Have an agent refine ticket requirements:
+
+```bash
+prlt work spawn TKT-042 --action groom
+```
+
+The agent adds acceptance criteria, subtasks, and estimates.
+
+## JSON Mode for AI Agents
+
+Proletariat has built-in support for AI agent orchestration via `--json` mode:
+
+```bash
+prlt work spawn --json
+```
+
+Returns:
+```json
+{
+  "prompt": {
+    "type": "list",
+    "message": "Select ticket to work on:",
+    "choices": [
+      {
+        "name": "[P1] TKT-001 - Add OAuth authentication",
+        "value": "TKT-001",
+        "command": "prlt work start TKT-001 --json"
+      }
+    ]
+  }
+}
+```
+
+AI agents can parse this output, make selections, and call subsequent commands.
+
+## Next Steps
+
+You're now ready to explore more advanced features:
+
+<CardGroup cols={2}>
+  <Card title="Commands" icon="terminal" href="/commands/overview">
+    Explore the full command reference
+  </Card>
+  <Card title="Workflows" icon="diagram-project" href="/concepts/workflows">
+    Learn about ticket workflows
+  </Card>
+  <Card title="Parallel Agents" icon="layer-group" href="/guides/parallel-agents">
+    Work with multiple agents simultaneously
+  </Card>
+  <Card title="JSON Mode" icon="code" href="/guides/json-mode">
+    Use JSON mode for AI agent integration
+  </Card>
+</CardGroup>
+
+## Getting Help
+
+Need assistance?
+
+- **Discord**: [discord.gg/tmZyjNNSvw](https://discord.gg/tmZyjNNSvw)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/chrismcdermut/proletariat/issues)
+- **Setup Help**: [Book a call](https://cal.com/chrismcdermut) for personalized setup assistance

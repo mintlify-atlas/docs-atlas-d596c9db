@@ -1,0 +1,398 @@
+---
+title: MCP Server Setup
+description: Configure Proletariat MCP server in Claude Code, Cursor, and other AI clients
+---
+
+## Installation
+
+The MCP server is included with the Proletariat CLI. Make sure you have it installed:
+
+<CodeGroup>
+
+```bash Homebrew
+brew install chrismcdermut/proletariat/prlt
+```
+
+```bash npm
+npm install -g @proletariat/cli
+```
+
+```bash pnpm
+pnpm install -g @proletariat/cli
+```
+
+</CodeGroup>
+
+Verify installation:
+
+```bash
+prlt --version
+```
+
+## Configuration
+
+### Claude Code
+
+Claude Code (formerly Claude Desktop) requires configuration in `~/.claude.json`.
+
+<Steps>
+  <Step title="Open config file">
+    Create or edit `~/.claude.json`:
+    
+    ```bash
+    mkdir -p ~/.claude
+    nano ~/.claude.json
+    ```
+  </Step>
+  
+  <Step title="Add MCP server config">
+    Add the `prlt` server to the `mcpServers` section:
+    
+    ```json ~/.claude.json
+    {
+      "mcpServers": {
+        "prlt": {
+          "command": "prlt",
+          "args": ["mcp-server"]
+        }
+      }
+    }
+    ```
+    
+    <Tip>
+      If you installed via npm/pnpm instead of Homebrew, use the npx approach shown in the Cursor section.
+    </Tip>
+  </Step>
+  
+  <Step title="Restart Claude Code">
+    Fully quit and restart Claude Code for the configuration to take effect.
+  </Step>
+  
+  <Step title="Verify connection">
+    Open Claude Code and check the MCP server status in the sidebar. You should see `prlt` listed with 140+ tools available.
+  </Step>
+</Steps>
+
+### Cursor
+
+Cursor uses a similar configuration format in its settings.
+
+<Steps>
+  <Step title="Open Cursor settings">
+    Go to **Settings > Features > MCP** or edit the config file directly:
+    
+    ```bash
+    nano ~/.cursor/mcp.json
+    ```
+  </Step>
+  
+  <Step title="Add MCP server config">
+    Use `npx` for broader compatibility:
+    
+    ```json ~/.cursor/mcp.json
+    {
+      "mcpServers": {
+        "prlt": {
+          "command": "npx",
+          "args": ["-y", "@proletariat/cli", "mcp-server"]
+        }
+      }
+    }
+    ```
+    
+    <Info>
+      Using `npx -y @proletariat/cli` ensures Cursor can always find the package, even if your PATH differs between terminal and GUI apps.
+    </Info>
+  </Step>
+  
+  <Step title="Restart Cursor">
+    Fully quit and restart Cursor for the configuration to take effect.
+  </Step>
+  
+  <Step title="Verify connection">
+    Check Cursor's MCP settings panel to confirm `prlt` is connected.
+  </Step>
+</Steps>
+
+### Other MCP Clients
+
+Any MCP-compatible client can connect to the Proletariat MCP server.
+
+<Tabs>
+  <Tab title="Direct Command">
+    If the client uses standard MCP configuration:
+    
+    ```json
+    {
+      "mcpServers": {
+        "prlt": {
+          "command": "prlt",
+          "args": ["mcp-server"]
+        }
+      }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Via npx">
+    For clients that need full paths or have PATH issues:
+    
+    ```json
+    {
+      "mcpServers": {
+        "prlt": {
+          "command": "npx",
+          "args": ["-y", "@proletariat/cli", "mcp-server"]
+        }
+      }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="With Full Path">
+    Find your installation path:
+    
+    ```bash
+    which prlt
+    # Output: /opt/homebrew/bin/prlt (or similar)
+    ```
+    
+    Use the full path in your config:
+    
+    ```json
+    {
+      "mcpServers": {
+        "prlt": {
+          "command": "/opt/homebrew/bin/prlt",
+          "args": ["mcp-server"]
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Configuration Examples
+
+### Multiple Workspaces
+
+You can run multiple MCP servers for different workspaces:
+
+```json
+{
+  "mcpServers": {
+    "prlt-main": {
+      "command": "prlt",
+      "args": ["mcp-server"],
+      "env": {
+        "PRLT_WORKSPACE": "/path/to/workspace-1"
+      }
+    },
+    "prlt-staging": {
+      "command": "prlt",
+      "args": ["mcp-server"],
+      "env": {
+        "PRLT_WORKSPACE": "/path/to/workspace-2"
+      }
+    }
+  }
+}
+```
+
+<Warning>
+  Multiple workspace support via environment variables is planned but not yet implemented. Currently, the MCP server detects the workspace from your current working directory.
+</Warning>
+
+### Custom Environment Variables
+
+Pass environment variables for GitHub authentication:
+
+```json
+{
+  "mcpServers": {
+    "prlt": {
+      "command": "prlt",
+      "args": ["mcp-server"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_your_token_here"
+      }
+    }
+  }
+}
+```
+
+## Troubleshooting
+
+### Server Not Starting
+
+<AccordionGroup>
+  <Accordion title="'prlt' command not found">
+    **Problem**: Client can't find the `prlt` command.
+    
+    **Solution**: Use the npx approach:
+    
+    ```json
+    {
+      "command": "npx",
+      "args": ["-y", "@proletariat/cli", "mcp-server"]
+    }
+    ```
+    
+    Or find and use the full path:
+    
+    ```bash
+    which prlt
+    ```
+  </Accordion>
+  
+  <Accordion title="Server crashes on startup">
+    **Problem**: MCP server exits immediately after starting.
+    
+    **Solution**: Test manually to see error messages:
+    
+    ```bash
+    prlt mcp-server
+    # Should start and wait for MCP protocol messages
+    ```
+    
+    If you see errors about missing dependencies, reinstall:
+    
+    ```bash
+    brew reinstall prlt
+    # or
+    npm install -g @proletariat/cli
+    ```
+  </Accordion>
+  
+  <Accordion title="No workspace detected">
+    **Problem**: Tools return "PMO not initialized" errors.
+    
+    **Solution**: The MCP server must run from within a workspace directory. Either:
+    
+    1. Open your AI client from inside a workspace directory
+    2. Create a workspace first:
+       
+       ```bash
+       cd ~/projects/my-workspace
+       prlt new
+       ```
+       
+    3. Use `cd` in the AI client to navigate to your workspace before calling tools
+  </Accordion>
+  
+  <Accordion title="Tools return empty results">
+    **Problem**: Tools connect but return no data.
+    
+    **Solution**: Verify workspace has data:
+    
+    ```bash
+    cd ~/path/to/workspace
+    prlt ticket list
+    prlt project list
+    ```
+    
+    If empty, create some test data:
+    
+    ```bash
+    prlt ticket create --title "Test ticket" --category feature
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Connection Issues
+
+<AccordionGroup>
+  <Accordion title="Client shows 'disconnected'">
+    **Problem**: MCP client can't maintain connection.
+    
+    **Solution**: Check client logs for errors. The server communicates over stdio, so:
+    
+    - Ensure no other processes are interfering
+    - Check that the command path is correct
+    - Verify JSON config syntax is valid
+  </Accordion>
+  
+  <Accordion title="Slow tool responses">
+    **Problem**: Tools take a long time to respond.
+    
+    **Solution**: This is usually due to:
+    
+    - Large ticket databases (filter queries with parameters)
+    - Docker operations (containers starting)
+    - Git operations (large repositories)
+    
+    Use more specific queries:
+    
+    ```typescript
+    // Slow - fetches everything
+    await client.callTool('ticket_list', {})
+    
+    // Fast - filtered query
+    await client.callTool('ticket_list', { 
+      project: 'PRJ-1', 
+      column: 'In Progress',
+      limit: 20 
+    })
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Testing Your Setup
+
+Once configured, test the connection:
+
+<Steps>
+  <Step title="Check tool availability">
+    In your AI client, ask:
+    
+    ```
+    What MCP tools do you have access to?
+    ```
+    
+    You should see 140+ tools starting with `ticket_`, `work_`, `agent_`, etc.
+  </Step>
+  
+  <Step title="Test a simple tool">
+    Try listing tickets:
+    
+    ```
+    Use the ticket_list tool to show me all tickets
+    ```
+  </Step>
+  
+  <Step title="Test workspace detection">
+    Check context awareness:
+    
+    ```
+    Use the utility_whoami tool to show my current workspace context
+    ```
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tool Reference" icon="wrench" href="/mcp/tools">
+    Browse all 140+ available tools and their parameters
+  </Card>
+  
+  <Card title="MCP Overview" icon="book-open" href="/mcp/overview">
+    Learn more about what the MCP server provides
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+<CardGroup cols={3}>
+  <Card title="npm Package" icon="npm" href="https://www.npmjs.com/package/@proletariat/cli">
+    View on npm registry
+  </Card>
+  
+  <Card title="MCP Registry" icon="book-open" href="https://registry.modelcontextprotocol.io">
+    Official MCP listing
+  </Card>
+  
+  <Card title="GitHub Issues" icon="github" href="https://github.com/chrismcdermut/proletariat/issues">
+    Report bugs or request features
+  </Card>
+</CardGroup>

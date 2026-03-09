@@ -1,0 +1,312 @@
+---
+title: 'prlt ticket view'
+description: 'View detailed ticket information'
+icon: 'eye'
+---
+
+Display comprehensive details for a specific ticket.
+
+## Usage
+
+<CodeGroup>
+
+```bash With Ticket ID
+prlt ticket view TKT-001
+```
+
+```bash Interactive Selection
+prlt ticket view
+```
+
+```bash JSON Output
+prlt ticket view TKT-001 --json
+```
+
+</CodeGroup>
+
+## Arguments
+
+<ParamField path="ticketId" type="string">
+  Ticket ID to view. If not provided, shows an interactive dropdown to select a ticket.
+  
+  ```bash
+  prlt ticket view TKT-001
+  ```
+</ParamField>
+
+## Flags
+
+<ParamField path="--project" type="string">
+  Project ID to filter tickets (when using interactive mode).
+  
+  ```bash
+  prlt ticket view --project mobile-app
+  ```
+</ParamField>
+
+<ParamField path="--json" type="boolean">
+  Output ticket details as JSON.
+  
+  ```bash
+  prlt ticket view TKT-001 --json
+  ```
+</ParamField>
+
+## Interactive Mode
+
+When run without a ticket ID, displays a searchable dropdown of all tickets:
+
+```
+? Select ticket to view:
+  TKT-001 - Fix login bug (Backlog)
+  TKT-002 - Add dark mode (In Progress)
+  TKT-003 - Update docs (Backlog)
+  TKT-004 - Refactor auth (In Progress)
+```
+
+Use arrow keys to navigate and press Enter to select.
+
+## Output Format
+
+### Standard Output
+
+```
+📄 Ticket TKT-001
+
+Title:       Fix login bug
+Project:     Mobile App
+Status:      Backlog
+Priority:    P1
+Category:    bug
+Created:     3/9/2024, 10:30:00 AM
+Updated:     3/9/2024, 2:45:00 PM
+
+Description:
+  ## What
+  Fix authentication flow for OAuth users
+  
+  ## Done when
+  - [ ] OAuth redirect works correctly
+  - [ ] Session persists after login
+  - [ ] Error messages are user-friendly
+  
+  ## Context
+  See similar fix in TKT-042
+  Files: src/auth/oauth.ts, src/middleware/session.ts
+```
+
+### JSON Output
+
+```json
+{
+  "success": true,
+  "ticket": {
+    "id": "TKT-001",
+    "title": "Fix login bug",
+    "description": "## What\nFix authentication flow for OAuth users\n\n## Done when\n- [ ] OAuth redirect works correctly\n- [ ] Session persists after login\n- [ ] Error messages are user-friendly",
+    "priority": "P1",
+    "category": "bug",
+    "statusName": "Backlog",
+    "statusCategory": "backlog",
+    "projectId": "mobile-app",
+    "assignee": null,
+    "owner": null,
+    "branch": null,
+    "epicId": null,
+    "position": 0,
+    "subtasks": [],
+    "labels": ["auth", "critical"],
+    "metadata": {},
+    "blockedBy": [],
+    "acceptanceCriteria": [
+      {
+        "id": "ac-1",
+        "criterion": "OAuth redirect works correctly",
+        "completed": false
+      },
+      {
+        "id": "ac-2",
+        "criterion": "Session persists after login",
+        "completed": false
+      }
+    ],
+    "specId": null,
+    "createdAt": "2024-03-09T10:30:00.000Z",
+    "updatedAt": "2024-03-09T14:45:00.000Z"
+  }
+}
+```
+
+## Displayed Fields
+
+The command shows all available ticket information:
+
+### Core Fields
+
+- **ID**: Unique ticket identifier
+- **Title**: Short summary
+- **Project**: Project name (or ID if project was deleted)
+- **Status**: Current column/status name
+- **Priority**: Priority level (P0-P3 or workspace-defined)
+- **Category**: Ticket category (bug, feature, etc.)
+
+### Timestamps
+
+- **Created**: When the ticket was created
+- **Updated**: Last modification time
+
+### Optional Fields
+
+These fields are shown when present:
+
+- **Description**: Full ticket description with formatting
+- **Owner**: Human responsible for the ticket
+- **Assignee**: Who's executing (human or agent)
+- **Epic**: Parent epic ID
+- **Branch**: Git branch for this ticket's work
+- **Labels**: Tags applied to the ticket
+- **Subtasks**: Checklist items with completion status
+- **Acceptance Criteria**: Structured verifiable criteria
+- **Blocked By**: Other ticket IDs this depends on
+- **Spec**: Linked specification ID
+- **Metadata**: Custom key-value pairs
+
+## Examples
+
+### View Specific Ticket
+
+```bash
+prlt ticket view TKT-001
+```
+
+### Interactive Selection
+
+```bash
+prlt ticket view
+```
+
+### View Within Specific Project
+
+```bash
+prlt ticket view --project mobile-app
+```
+
+### Get JSON for Scripting
+
+```bash
+prlt ticket view TKT-001 --json
+```
+
+### Extract Specific Field with jq
+
+```bash
+prlt ticket view TKT-001 --json | jq -r '.ticket.description'
+```
+
+### Check Ticket Status
+
+```bash
+prlt ticket view TKT-001 --json | jq -r '.ticket.statusName'
+```
+
+### View All Acceptance Criteria
+
+```bash
+prlt ticket view TKT-001 --json | jq '.ticket.acceptanceCriteria'
+```
+
+## Understanding Ticket Structure
+
+<AccordionGroup>
+
+<Accordion title="Status vs Status Category">
+  - **statusName**: The display name of the column (e.g., "In Progress", "Ready for Review")
+  - **statusCategory**: The semantic state (e.g., "started", "completed", "backlog")
+  
+  Status categories are fixed: `triage`, `backlog`, `unstarted`, `started`, `completed`, `canceled`
+</Accordion>
+
+<Accordion title="Owner vs Assignee">
+  - **owner**: The human responsible for the ticket (product owner, PM, etc.)
+  - **assignee**: Who's actively working on it (human developer or AI agent)
+  
+  A ticket can have an owner without an assignee (not yet assigned) or vice versa.
+</Accordion>
+
+<Accordion title="Subtasks vs Acceptance Criteria">
+  - **subtasks**: Simple checklist items (id, title, done)
+  - **acceptanceCriteria**: Structured criteria parsed from description
+  
+  Both are tracked independently and can be marked as complete.
+</Accordion>
+
+<Accordion title="Epic vs Spec">
+  - **epicId**: Groups related tickets for tracking (e.g., "OAuth Implementation")
+  - **specId**: Links to formal specification document
+  
+  A ticket can be in an epic, linked to a spec, both, or neither.
+</Accordion>
+
+</AccordionGroup>
+
+## Use Cases
+
+### Before Starting Work
+
+Review ticket details before spawning an agent:
+
+```bash
+prlt ticket view TKT-001
+# Review description and acceptance criteria
+prlt work spawn TKT-001
+```
+
+### During Code Review
+
+Check the original requirements:
+
+```bash
+prlt ticket view TKT-001 --json | jq -r '.ticket.description'
+```
+
+### For Reporting
+
+Extract ticket data for reports:
+
+```bash
+# Get all P0 tickets with full details
+for ticket in $(prlt ticket list --priority P0 --json | jq -r '.[].id'); do
+  prlt ticket view $ticket --json >> p0-tickets.json
+done
+```
+
+### Debugging Agent Issues
+
+Verify what the agent was supposed to do:
+
+```bash
+prlt ticket view TKT-001
+prlt execution logs <execution-id>
+```
+
+## Related Commands
+
+<CardGroup cols={2}>
+
+<Card title="ticket list" icon="list" href="/commands/ticket/list">
+  List all tickets
+</Card>
+
+<Card title="ticket edit" icon="pen" href="/commands/ticket/edit">
+  Edit ticket details
+</Card>
+
+<Card title="ticket move" icon="arrows-turn-right" href="/commands/ticket/move">
+  Move ticket to different column
+</Card>
+
+<Card title="work spawn" icon="rocket" href="/commands/work/spawn">
+  Spawn agent to work on ticket
+</Card>
+
+</CardGroup>

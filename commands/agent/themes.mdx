@@ -1,0 +1,429 @@
+---
+title: prlt agent themes
+description: Manage agent naming themes
+---
+
+Create and manage themes for agent naming - collections of names used when creating staff agents.
+
+## Subcommands
+
+- [`prlt agent themes list`](#list) - List available themes
+- [`prlt agent themes set`](#set) - Set active theme for workspace
+- [`prlt agent themes create`](#create) - Create custom theme
+- [`prlt agent themes add-names`](#add-names) - Add names to theme
+
+---
+
+## list
+
+List all available agent themes with their name counts.
+
+### Usage
+
+```bash
+prlt agent themes list
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--machine` | Output in JSON format |
+
+### Example Output
+
+```bash
+prlt agent themes list
+```
+
+```
+Agent Themes
+
+  Billionaires [built-in]
+    ID: billionaires
+    The ultra-wealthy work for you
+    Names: 45 available, 3 in use
+
+  Toyota Garage [built-in]
+    ID: toyotas
+    Reliable workhorses for your project
+    Names: 58 available, 2 in use
+
+  Company Portfolio [built-in]
+    ID: companies
+    Your corporate portfolio
+    Names: 72 available, 0 in use
+
+  Cracked Engineers [built-in]
+    ID: cracked-engineers
+    AI researchers, engineers, and tech legends
+    Names: 25 available, 1 in use
+
+  Greek Gods
+    ID: greek-gods
+    Mount Olympus crew
+    Names: 8 available, 4 in use
+
+Use: prlt staff add --theme <theme-id>
+```
+
+### JSON Output
+
+```bash
+prlt agent themes list --machine
+```
+
+```json
+[
+  {
+    "id": "billionaires",
+    "name": "billionaires",
+    "display_name": "Billionaires",
+    "description": "The ultra-wealthy work for you",
+    "builtin": true,
+    "availableNames": 45,
+    "inUse": 3,
+    "totalNames": 48
+  },
+  {
+    "id": "greek-gods",
+    "name": "greek-gods",
+    "display_name": "Greek Gods",
+    "description": "Mount Olympus crew",
+    "builtin": false,
+    "availableNames": 8,
+    "inUse": 4,
+    "totalNames": 12
+  }
+]
+```
+
+### Built-in Themes
+
+#### billionaires
+
+Tech billionaires and founders:
+
+```
+altman, andreesen, ballmer, benioff, bezos, branson, brin, buffett,
+chesky, collison, cook, dalio, dario, dell, dorsey, durov, ellison,
+fink, gates, hastings, hoffman, horowitz, huang, jobs, kalanick,
+khosla, knight, levinson, ma, mcnealy, musk, nadella, neumann,
+omidyar, page, parker, pichai, sandberg, schmidt, schultz, siebel,
+silbermann, spiegel, sweeney, systrom, thiel, wozniak, yang, zuck
+```
+
+#### toyotas
+
+Toyota vehicle names:
+
+```
+4runner, avalon, camry, celica, corolla, cressida, fj40, fj60,
+fj80, highlander, hilux, landcruiser, mr2, prius, rav4, sequoia,
+sienna, supra, tacoma, tercel, tundra, venza, yaris, [+42 more]
+```
+
+#### companies
+
+Tech company names:
+
+```
+adobe, airbnb, amazon, apple, atlassian, cisco, coinbase,
+databricks, discord, dropbox, figma, github, google, intel, meta,
+microsoft, netflix, notion, nvidia, openai, oracle, [+51 more]
+```
+
+#### cracked-engineers
+
+AI researchers and tech legends:
+
+```
+karpathy, lecun, sutskever, sinofsky, spolsky, torvalds, yegge,
+grove, kutcher, rabois, ross, fridman, hurd, iger, ive, levie,
+lynch, marcus, mayer, morin, powell, rometty, wales, wojcicki,
+zhang, zhong
+```
+
+---
+
+## set
+
+Set the active theme for this workspace. New agents will use names from this theme by default.
+
+### Usage
+
+```bash
+prlt agent themes set [theme]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `theme` | Theme ID to activate (optional, prompts if not provided) |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--machine` | Output in JSON format |
+
+### Examples
+
+#### Set theme interactively
+
+```bash
+prlt agent themes set
+```
+
+```
+? Select theme for this workspace:
+> Billionaires (45 available) ✓ current
+  Toyota Garage (58 available)
+  Company Portfolio (72 available)
+  Cracked Engineers (25 available)
+  Greek Gods (8 available)
+
+✓ Active theme set to: Billionaires
+  New agents will be selected from this theme.
+```
+
+#### Set theme directly
+
+```bash
+prlt agent themes set toyotas
+```
+
+```
+✓ Active theme set to: Toyota Garage
+  New agents will be selected from this theme.
+```
+
+### Theme Behavior
+
+Once a theme is set:
+
+1. `prlt agent staff add` (without args) shows names from active theme
+2. Names can still be selected from other themes using `--theme`
+3. Custom names can always be entered manually
+4. Theme persists until changed
+
+---
+
+## create
+
+Create a custom agent theme.
+
+### Usage
+
+```bash
+prlt agent themes create <name> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `name` | Theme name (lowercase with hyphens) |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--description`, `-d` | Theme description |
+| `--display-name` | Display name (defaults to formatted name) |
+| `--machine` | Output in JSON format |
+
+### Examples
+
+#### Create basic theme
+
+```bash
+prlt agent themes create greek-gods
+```
+
+```
+✓ Created theme: Greek Gods
+  ID: greek-gods
+
+Add names with: prlt theme add-names greek-gods <names...>
+```
+
+#### Create with description
+
+```bash
+prlt agent themes create greek-gods \
+  --description "Mount Olympus crew" \
+  --display-name "Greek Gods"
+```
+
+```
+✓ Created theme: Greek Gods
+  ID: greek-gods
+  Mount Olympus crew
+
+Add names with: prlt theme add-names greek-gods <names...>
+```
+
+#### Create and add names
+
+```bash
+# Create theme
+prlt agent themes create superheroes --description "Comic book heroes"
+
+# Add names to it
+prlt agent themes add-names superheroes batman superman wonderwoman flash
+```
+
+### Name Format
+
+Theme names:
+- Must be lowercase
+- Alphanumeric with optional hyphens
+- Used as unique identifier (ID)
+
+Display names:
+- Can have any capitalization
+- Defaults to title case (greek-gods → Greek Gods)
+- Override with `--display-name`
+
+---
+
+## add-names
+
+Add names to a custom or built-in theme.
+
+### Usage
+
+```bash
+prlt agent themes add-names <theme> <names...>
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `theme` | Theme ID to add names to |
+| `names` | Space-separated names to add |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--machine` | Output in JSON format |
+
+### Examples
+
+#### Add names to theme
+
+```bash
+prlt agent themes add-names greek-gods zeus athena poseidon
+```
+
+```
+✓ Added 3 name(s) to Greek Gods:
+  zeus, athena, poseidon
+
+  Theme now has 3 names total.
+```
+
+#### Add with normalization
+
+```bash
+prlt agent themes add-names greek-gods "Wonder Woman" SUPERMAN Batman
+```
+
+```
+Normalized names:
+   Wonder Woman → wonderwoman
+   SUPERMAN → superman
+
+✓ Added 3 name(s) to Greek Gods:
+  wonderwoman, superman, batman
+
+  Theme now has 6 names total.
+```
+
+#### Extend built-in theme
+
+```bash
+prlt agent themes add-names billionaires custom-name-1 custom-name-2
+```
+
+You can add custom names to built-in themes:
+
+```
+✓ Added 2 name(s) to Billionaires:
+  custom-name-1, custom-name-2
+
+  Theme now has 50 names total.
+```
+
+### Name Validation
+
+Names must be:
+- Lowercase alphanumeric (after normalization)
+- Optional hyphens or underscores
+- Start with letter or number
+
+Invalid characters are removed during normalization:
+
+```
+Agent 1    → agent-1
+Test_Name  → testname
+My-Agent!  → my-agent
+```
+
+## Theme Workflow
+
+### Create a custom theme
+
+```bash
+# 1. Create the theme
+prlt agent themes create star-wars \
+  --description "A galaxy far, far away" \
+  --display-name "Star Wars"
+
+# 2. Add character names
+prlt agent themes add-names star-wars \
+  luke leia han chewie yoda obiwan vader rey finn poe
+
+# 3. Set as active theme
+prlt agent themes set star-wars
+
+# 4. Create agents from theme
+prlt agent staff add
+# Select from Star Wars characters
+```
+
+### Extend existing theme
+
+```bash
+# Add more names to built-in theme
+prlt agent themes add-names toyotas bz4x crown-signia gr86 grsupra
+
+# Verify additions
+prlt agent themes list
+```
+
+### Use multiple themes
+
+```bash
+# Set default theme
+prlt agent themes set billionaires
+
+# Create agents from default
+prlt agent staff add  # Uses billionaires
+
+# Create agents from specific theme
+prlt agent staff add --theme toyotas  # Uses toyotas
+
+# Mix and match
+prlt agent staff add --theme companies  # Uses companies
+```
+
+## Related Commands
+
+- [`prlt agent staff add`](/commands/agent/staff#add) - Create agents using themes
+- [`prlt agent list`](/commands/agent/list) - View agents and their theme origins
+- [`prlt theme`](/commands/theme) - Shorthand theme commands

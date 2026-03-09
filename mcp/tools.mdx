@@ -1,0 +1,782 @@
+---
+title: MCP Tools Reference
+description: Complete reference of 140+ MCP tools for AI agent integration
+---
+
+## Overview
+
+The Proletariat MCP server provides **140+ tools** organized into logical categories. Each tool accepts structured parameters and returns JSON responses.
+
+<Info>
+  All tools use Zod schemas for validation. Optional parameters are clearly marked, and error responses follow a consistent format.
+</Info>
+
+## Tool Categories
+
+### Ticket Management (15 tools)
+
+Core ticket operations for creating, querying, and managing work items.
+
+<AccordionGroup>
+  <Accordion title="ticket_list" icon="list">
+    List tickets with optional filters. Returns summary fields only.
+    
+    **Parameters:**
+    - `project` (optional): Project ID
+    - `column` (optional): Filter by status/column
+    - `priority` (optional): Filter by priority
+    - `category` (optional): Filter by category
+    - `assignee` (optional): Filter by assignee
+    - `owner` (optional): Filter by owner
+    - `search` (optional): Search in title/description
+    - `epic` (optional): Filter by epic ID
+    - `label` (optional): Filter by label name
+    - `label_group` (optional): Filter by label group
+    - `all_projects` (optional): List from all projects
+    - `limit` (optional): Max results (default: 50)
+    - `offset` (optional): Skip N tickets (default: 0)
+    
+    **Returns:** Array of ticket summaries with id, title, priority, category, status, labels.
+  </Accordion>
+  
+  <Accordion title="ticket_show" icon="eye">
+    Get full details for a specific ticket, including description, acceptance criteria, and subtasks.
+    
+    **Parameters:**
+    - `id` (required): Ticket ID (e.g., "TKT-042")
+    
+    **Returns:** Complete ticket object with all fields.
+  </Accordion>
+  
+  <Accordion title="ticket_create" icon="plus">
+    Create a new ticket.
+    
+    **Parameters:**
+    - `title` (required): Ticket title
+    - `project` (optional): Project ID
+    - `description` (optional): Full description
+    - `priority` (optional): Priority level
+    - `category` (optional): Category (feature, bug, etc.)
+    - `column` (optional): Initial status/column
+    - `assignee` (optional): Assigned user
+    - `owner` (optional): Owner
+    - `epic_id` (optional): Link to epic
+    - `labels` (optional): Array of label names
+    - `subtasks` (optional): Array of subtask titles
+    
+    **Returns:** Created ticket with ID.
+  </Accordion>
+  
+  <Accordion title="ticket_update" icon="pen">
+    Update an existing ticket's fields.
+    
+    **Parameters:**
+    - `id` (required): Ticket ID
+    - `title` (optional): New title
+    - `description` (optional): New description
+    - `priority` (optional): New priority
+    - `category` (optional): New category
+    - `assignee` (optional): New assignee
+    - `owner` (optional): New owner
+    - `acceptance_criteria` (optional): Array of criteria
+    - `subtasks` (optional): Array of subtasks
+    
+    **Returns:** Updated ticket.
+  </Accordion>
+  
+  <Accordion title="ticket_move" icon="arrows">
+    Move a ticket to a different status/column.
+    
+    **Parameters:**
+    - `id` (required): Ticket ID
+    - `status` (required): Target status name
+    
+    **Returns:** Updated ticket with new status.
+  </Accordion>
+  
+  <Accordion title="ticket_delete" icon="trash">
+    Delete a ticket permanently.
+    
+    **Parameters:**
+    - `id` (required): Ticket ID
+    
+    **Returns:** Success confirmation.
+  </Accordion>
+  
+  <Accordion title="ticket_link_blocker" icon="link">
+    Link a blocking ticket relationship.
+    
+    **Parameters:**
+    - `id` (required): Blocked ticket ID
+    - `blocker_id` (required): Blocking ticket ID
+    
+    **Returns:** Link confirmation.
+  </Accordion>
+  
+  <Accordion title="ticket_link_related" icon="link">
+    Link a related ticket relationship.
+    
+    **Parameters:**
+    - `id` (required): Ticket ID
+    - `related_id` (required): Related ticket ID
+    
+    **Returns:** Link confirmation.
+  </Accordion>
+  
+  <Accordion title="ticket_unlink" icon="unlink">
+    Remove a ticket link.
+    
+    **Parameters:**
+    - `id` (required): Ticket ID
+    - `linked_id` (required): Linked ticket ID
+    
+    **Returns:** Unlink confirmation.
+  </Accordion>
+</AccordionGroup>
+
+### Work & Agent Operations (12 tools)
+
+Spawn agents, track executions, and manage the work lifecycle.
+
+<AccordionGroup>
+  <Accordion title="work_start" icon="play">
+    Start an agent on a single ticket.
+    
+    **Parameters:**
+    - `ticket_id` (required): Ticket ID
+    - `action` (optional): Action template (implement, groom, review)
+    - `mode` (optional): Execution mode (docker or host)
+    - `display` (optional): Display mode (terminal or background)
+    - `skip_permissions` (optional): YOLO mode (no prompts)
+    - `agent` (optional): Specific agent name (staff agent)
+    
+    **Returns:** Execution details with session info.
+  </Accordion>
+  
+  <Accordion title="work_spawn" icon="rocket">
+    Spawn an agent (alias for work_start).
+    
+    **Parameters:** Same as `work_start`.
+    
+    **Returns:** Execution details.
+  </Accordion>
+  
+  <Accordion title="work_spawn_batch" icon="layer-group">
+    Spawn multiple agents in parallel.
+    
+    **Parameters:**
+    - `ticket_ids` (required): Array of ticket IDs
+    - `action` (optional): Action for all tickets
+    - `mode` (optional): Execution mode
+    - `display` (optional): Display mode
+    - `skip_permissions` (optional): YOLO mode
+    
+    **Returns:** Array of execution details.
+  </Accordion>
+  
+  <Accordion title="work_complete" icon="check">
+    Mark work as complete and move to Done.
+    
+    **Parameters:**
+    - `ticket_id` (required): Ticket ID
+    - `execution_id` (optional): Execution ID
+    
+    **Returns:** Updated ticket and execution.
+  </Accordion>
+  
+  <Accordion title="work_ready" icon="flag">
+    Mark work as ready for review.
+    
+    **Parameters:**
+    - `ticket_id` (required): Ticket ID
+    - `execution_id` (optional): Execution ID
+    
+    **Returns:** Updated ticket.
+  </Accordion>
+  
+  <Accordion title="work_revise" icon="rotate">
+    Request revisions and move back to In Progress.
+    
+    **Parameters:**
+    - `ticket_id` (required): Ticket ID
+    - `notes` (optional): Revision notes
+    
+    **Returns:** Updated ticket.
+  </Accordion>
+</AccordionGroup>
+
+### Project & Epic Management (20 tools)
+
+Organize work with projects and epics.
+
+<AccordionGroup>
+  <Accordion title="project_list" icon="folder">
+    List all projects.
+    
+    **Parameters:**
+    - `include_archived` (optional): Include archived projects
+    
+    **Returns:** Array of projects.
+  </Accordion>
+  
+  <Accordion title="project_create" icon="plus">
+    Create a new project.
+    
+    **Parameters:**
+    - `name` (required): Project name
+    - `description` (optional): Project description
+    - `workflow` (optional): Workflow ID
+    
+    **Returns:** Created project.
+  </Accordion>
+  
+  <Accordion title="epic_list" icon="book">
+    List epics with optional filters.
+    
+    **Parameters:**
+    - `project` (optional): Project ID
+    - `status` (optional): Epic status
+    
+    **Returns:** Array of epics.
+  </Accordion>
+  
+  <Accordion title="epic_create" icon="plus">
+    Create a new epic.
+    
+    **Parameters:**
+    - `title` (required): Epic title
+    - `project` (optional): Project ID
+    - `description` (optional): Description
+    - `goals` (optional): Array of goals
+    
+    **Returns:** Created epic.
+  </Accordion>
+  
+  <Accordion title="epic_progress" icon="chart-line">
+    View epic progress and ticket breakdown.
+    
+    **Parameters:**
+    - `id` (required): Epic ID
+    
+    **Returns:** Progress summary with ticket counts by status.
+  </Accordion>
+</AccordionGroup>
+
+### Board & Views (9 tools)
+
+Visualize and filter work on kanban boards.
+
+<AccordionGroup>
+  <Accordion title="board_view" icon="table">
+    View kanban board with tickets organized by status.
+    
+    **Parameters:**
+    - `project` (optional): Project ID
+    - `format` (optional): Output format (json or text)
+    - `priority` (optional): Filter by priority
+    - `category` (optional): Filter by category
+    - `assignee` (optional): Filter by assignee
+    
+    **Returns:** Board layout with columns and tickets.
+  </Accordion>
+  
+  <Accordion title="board_column" icon="columns">
+    Get all tickets in a specific column.
+    
+    **Parameters:**
+    - `column` (required): Column/status name
+    - `project` (optional): Project ID
+    
+    **Returns:** Array of tickets in that column.
+  </Accordion>
+</AccordionGroup>
+
+### Execution Management (5 tools)
+
+Monitor and control running agents.
+
+<AccordionGroup>
+  <Accordion title="execution_list" icon="server">
+    List all executions (running agents).
+    
+    **Parameters:**
+    - `status` (optional): Filter by status (running, stopped, completed)
+    - `ticket_id` (optional): Filter by ticket
+    - `agent` (optional): Filter by agent name
+    
+    **Returns:** Array of executions with status, agent, ticket info.
+  </Accordion>
+  
+  <Accordion title="execution_show" icon="eye">
+    Get details for a specific execution.
+    
+    **Parameters:**
+    - `id` (required): Execution ID
+    
+    **Returns:** Full execution details.
+  </Accordion>
+  
+  <Accordion title="execution_logs" icon="file-lines">
+    View agent output logs.
+    
+    **Parameters:**
+    - `id` (required): Execution ID
+    - `lines` (optional): Number of lines (default: 50)
+    
+    **Returns:** Recent log output.
+  </Accordion>
+  
+  <Accordion title="execution_stop" icon="stop">
+    Stop a running execution.
+    
+    **Parameters:**
+    - `id` (required): Execution ID
+    
+    **Returns:** Stop confirmation.
+  </Accordion>
+</AccordionGroup>
+
+### Agent Management (8 tools)
+
+Manage staff and temp agents.
+
+<AccordionGroup>
+  <Accordion title="agent_list" icon="users">
+    List all agents.
+    
+    **Parameters:**
+    - `type` (optional): Filter by type (staff, temp, all)
+    
+    **Returns:** Array of agents with workspace info.
+  </Accordion>
+  
+  <Accordion title="agent_status" icon="circle-info">
+    Check agent status (auto-detects current agent if no name provided).
+    
+    **Parameters:**
+    - `agent` (optional): Agent name
+    
+    **Returns:** Agent status, workspace, running tickets.
+  </Accordion>
+  
+  <Accordion title="agent_add" icon="user-plus">
+    Add new staff agents.
+    
+    **Parameters:**
+    - `names` (optional): Array of names (uses theme if omitted)
+    - `theme` (optional): Theme for name generation
+    - `clone` (optional): Use git clone instead of worktree
+    
+    **Returns:** Created agents.
+  </Accordion>
+  
+  <Accordion title="agent_remove" icon="user-minus">
+    Remove an agent and clean up its workspace.
+    
+    **Parameters:**
+    - `name` (required): Agent name
+    
+    **Returns:** Removal confirmation.
+  </Accordion>
+</AccordionGroup>
+
+### Docker Operations (7 tools)
+
+Manage Docker containers for isolated execution.
+
+<AccordionGroup>
+  <Accordion title="docker_status" icon="docker">
+    Check Docker daemon status.
+    
+    **Parameters:** None.
+    
+    **Returns:** Docker version and status.
+  </Accordion>
+  
+  <Accordion title="docker_list" icon="list">
+    List all prlt Docker containers.
+    
+    **Parameters:** None.
+    
+    **Returns:** Array of containers with status.
+  </Accordion>
+  
+  <Accordion title="docker_start" icon="play">
+    Start Docker containers.
+    
+    **Parameters:**
+    - `agent` (optional): Specific agent (starts all if omitted)
+    
+    **Returns:** Start confirmation.
+  </Accordion>
+  
+  <Accordion title="docker_stop" icon="stop">
+    Stop Docker containers.
+    
+    **Parameters:**
+    - `agent` (optional): Specific agent
+    
+    **Returns:** Stop confirmation.
+  </Accordion>
+</AccordionGroup>
+
+### Workflow & Status (19 tools)
+
+Define custom workflows, phases, and statuses.
+
+<AccordionGroup>
+  <Accordion title="workflow_list" icon="diagram-project">
+    List all workflows.
+    
+    **Parameters:** None.
+    
+    **Returns:** Array of workflows with phase counts.
+  </Accordion>
+  
+  <Accordion title="workflow_create" icon="plus">
+    Create a new workflow.
+    
+    **Parameters:**
+    - `name` (required): Workflow name
+    - `description` (optional): Description
+    
+    **Returns:** Created workflow.
+  </Accordion>
+  
+  <Accordion title="status_list" icon="tags">
+    List all statuses in a workflow.
+    
+    **Parameters:**
+    - `workflow` (optional): Workflow ID
+    
+    **Returns:** Array of statuses grouped by phase.
+  </Accordion>
+  
+  <Accordion title="status_create" icon="plus">
+    Create a custom status.
+    
+    **Parameters:**
+    - `name` (required): Status name
+    - `phase` (required): Phase ID
+    - `category` (required): Status category (todo, active, done)
+    
+    **Returns:** Created status.
+  </Accordion>
+</AccordionGroup>
+
+### Repository & Branch (10 tools)
+
+Manage git repositories and branches.
+
+<AccordionGroup>
+  <Accordion title="repo_list" icon="code-branch">
+    List all repositories in workspace.
+    
+    **Parameters:** None.
+    
+    **Returns:** Array of repos with paths and remotes.
+  </Accordion>
+  
+  <Accordion title="repo_add" icon="plus">
+    Add a repository to the workspace.
+    
+    **Parameters:**
+    - `url` (required): Git repository URL
+    - `name` (optional): Custom name
+    
+    **Returns:** Added repository.
+  </Accordion>
+  
+  <Accordion title="branch_create" icon="code-fork">
+    Create a new branch.
+    
+    **Parameters:**
+    - `name` (required): Branch name
+    - `base` (optional): Base branch (default: main)
+    - `ticket_id` (optional): Auto-format as feat/TKT-XXX
+    
+    **Returns:** Created branch.
+  </Accordion>
+  
+  <Accordion title="branch_validate" icon="check">
+    Validate branch name format.
+    
+    **Parameters:**
+    - `name` (required): Branch name to validate
+    
+    **Returns:** Validation result.
+  </Accordion>
+</AccordionGroup>
+
+### GitHub Integration (5 tools)
+
+Authenticate and manage GitHub operations.
+
+<AccordionGroup>
+  <Accordion title="gh_status" icon="github">
+    Check GitHub authentication status.
+    
+    **Parameters:** None.
+    
+    **Returns:** Auth status and username.
+  </Accordion>
+  
+  <Accordion title="gh_login" icon="arrow-right-to-bracket">
+    Login to GitHub.
+    
+    **Parameters:** None (interactive).
+    
+    **Returns:** Login confirmation.
+  </Accordion>
+  
+  <Accordion title="pr_create" icon="code-pull-request">
+    Create a pull request.
+    
+    **Parameters:**
+    - `title` (required): PR title
+    - `body` (optional): PR description
+    - `base` (optional): Base branch
+    - `ticket_id` (optional): Link to ticket
+    
+    **Returns:** Created PR with URL.
+  </Accordion>
+</AccordionGroup>
+
+### Tmux Sessions (4 tools)
+
+Manage persistent terminal sessions.
+
+<AccordionGroup>
+  <Accordion title="tmux_list" icon="window">
+    List active tmux sessions.
+    
+    **Parameters:** None.
+    
+    **Returns:** Array of sessions with creation times.
+  </Accordion>
+  
+  <Accordion title="tmux_attach" icon="link">
+    Attach to a tmux session.
+    
+    **Parameters:**
+    - `session` (required): Session name
+    
+    **Returns:** Attach command.
+  </Accordion>
+</AccordionGroup>
+
+### Labels & Categories (13 tools)
+
+Organize tickets with labels and categories.
+
+<AccordionGroup>
+  <Accordion title="label_list" icon="tag">
+    List all labels.
+    
+    **Parameters:**
+    - `group` (optional): Filter by group
+    
+    **Returns:** Array of labels with group info.
+  </Accordion>
+  
+  <Accordion title="label_create" icon="plus">
+    Create a new label.
+    
+    **Parameters:**
+    - `name` (required): Label name
+    - `group` (optional): Label group
+    - `color` (optional): Color hex code
+    
+    **Returns:** Created label.
+  </Accordion>
+  
+  <Accordion title="category_list" icon="folder-tree">
+    List all ticket categories.
+    
+    **Parameters:** None.
+    
+    **Returns:** Array of categories.
+  </Accordion>
+</AccordionGroup>
+
+### Templates & Actions (14 tools)
+
+Reusable templates and action prompts.
+
+<AccordionGroup>
+  <Accordion title="template_list" icon="file-lines">
+    List all templates.
+    
+    **Parameters:**
+    - `type` (optional): Filter by type (ticket, phase)
+    
+    **Returns:** Array of templates.
+  </Accordion>
+  
+  <Accordion title="action_list" icon="bolt">
+    List all action templates.
+    
+    **Parameters:** None.
+    
+    **Returns:** Array of actions with prompts.
+  </Accordion>
+  
+  <Accordion title="action_show" icon="eye">
+    Show action details.
+    
+    **Parameters:**
+    - `id` (required): Action ID
+    
+    **Returns:** Full action with prompt template.
+  </Accordion>
+</AccordionGroup>
+
+### Utilities (7 tools)
+
+Helper tools for context and operations.
+
+<AccordionGroup>
+  <Accordion title="utility_whoami" icon="user">
+    Show current context (workspace, agent, project).
+    
+    **Parameters:** None.
+    
+    **Returns:** Current workspace, agent name, and project.
+  </Accordion>
+  
+  <Accordion title="utility_priorities" icon="list-ol">
+    Get workspace priority scale.
+    
+    **Parameters:** None.
+    
+    **Returns:** Priority levels (P0, P1, P2, etc.).
+  </Accordion>
+  
+  <Accordion title="utility_commit" icon="code-commit">
+    Create a conventional commit.
+    
+    **Parameters:**
+    - `type` (required): Commit type (feat, fix, docs, etc.)
+    - `message` (required): Commit message
+    - `scope` (optional): Scope
+    
+    **Returns:** Commit confirmation.
+  </Accordion>
+</AccordionGroup>
+
+## Response Formats
+
+All tools return responses in this structure:
+
+### Success Response
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"success\": true, \"data\": {...}}"
+    }
+  ]
+}
+```
+
+### Error Response
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"success\": false, \"error\": \"Error message\"}"
+    }
+  ],
+  "isError": true
+}
+```
+
+## Usage Examples
+
+### Query Tickets and Spawn Agent
+
+```typescript
+// Find high-priority bugs
+const result = await client.callTool('ticket_list', {
+  category: 'bug',
+  priority: 'P1',
+  column: 'Backlog'
+})
+
+const tickets = JSON.parse(result.content[0].text)
+
+// Spawn an agent on the first one
+if (tickets.tickets.length > 0) {
+  await client.callTool('work_start', {
+    ticket_id: tickets.tickets[0].id,
+    action: 'implement',
+    mode: 'docker',
+    display: 'background'
+  })
+}
+```
+
+### Monitor Running Work
+
+```typescript
+// Check all running executions
+const executions = await client.callTool('execution_list', {
+  status: 'running'
+})
+
+// Get logs for one
+const logs = await client.callTool('execution_logs', {
+  id: 'exec-123',
+  lines: 100
+})
+```
+
+### Batch Operations
+
+```typescript
+// Get all tickets needing grooming
+const tickets = await client.callTool('ticket_list', {
+  column: 'Backlog',
+  limit: 10
+})
+
+// Spawn groom actions on all of them
+const ticketIds = JSON.parse(tickets.content[0].text).tickets.map(t => t.id)
+
+await client.callTool('work_spawn_batch', {
+  ticket_ids: ticketIds,
+  action: 'groom',
+  mode: 'docker'
+})
+```
+
+## Tool Naming Convention
+
+Tools follow this naming pattern:
+
+```
+<resource>_<operation>
+```
+
+Examples:
+- `ticket_list`, `ticket_create`, `ticket_show`
+- `work_start`, `work_complete`, `work_ready`
+- `agent_list`, `agent_status`, `agent_add`
+
+This makes tools predictable and easy to discover.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Setup Guide" icon="gear" href="/mcp/setup">
+    Configure the MCP server in your AI client
+  </Card>
+  
+  <Card title="MCP Overview" icon="book-open" href="/mcp/overview">
+    Learn about the MCP server architecture
+  </Card>
+</CardGroup>

@@ -1,0 +1,248 @@
+---
+title: prlt workspace list
+description: List all registered and discovered HQ workspaces
+---
+
+## Usage
+
+```bash
+prlt workspace list [--json]
+```
+
+## Description
+
+Lists all HQ workspaces on your machine, including:
+
+- **Registered workspaces** - From `~/.proletariat/config.json`
+- **Discovered workspaces** - Valid HQs found in the current directory tree (backward compatibility)
+
+For each workspace, shows:
+- Name
+- Path
+- Active status
+- PMO availability
+- Registration status
+- Existence validation
+
+## Flags
+
+<ParamField path="--json" type="boolean" default="false">
+Output in JSON format for programmatic access
+</ParamField>
+
+<ParamField path="--machine" type="boolean" default="false">
+Alias for `--json`
+</ParamField>
+
+## Examples
+
+### List all workspaces
+
+```bash
+prlt workspace list
+```
+
+Output:
+```
+Registered workspaces:
+
+  my-project (active) [has PMO]
+    Path: /Users/you/my-project-hq
+
+  oauth-service [has PMO]
+    Path: /Users/you/oauth-hq
+
+  legacy-app [not registered]
+    Path: /Users/you/legacy-app-hq
+
+Some workspaces are not registered.
+Run "prlt workspace add <path>" to register them.
+
+To switch workspaces, run:
+  prlt workspace use <name|path>
+```
+
+### JSON output
+
+```bash
+prlt workspace list --json
+```
+
+Output:
+```json
+{
+  "workspaces": [
+    {
+      "name": "my-project",
+      "path": "/Users/you/my-project-hq",
+      "active": true,
+      "exists": true,
+      "hasPMO": true,
+      "registeredAt": "2026-03-09T12:00:00.000Z",
+      "source": "registry"
+    },
+    {
+      "name": "oauth-service",
+      "path": "/Users/you/oauth-hq",
+      "active": false,
+      "exists": true,
+      "hasPMO": true,
+      "registeredAt": "2026-03-08T10:30:00.000Z",
+      "source": "registry"
+    },
+    {
+      "name": "legacy-app",
+      "path": "/Users/you/legacy-app-hq",
+      "active": false,
+      "exists": true,
+      "hasPMO": false,
+      "source": "discovered"
+    }
+  ],
+  "activeWorkspace": "/Users/you/my-project-hq",
+  "envOverride": null
+}
+```
+
+### No workspaces found
+
+```bash
+prlt workspace list
+```
+
+Output:
+```
+No workspaces found.
+Run "prlt new" to create a new workspace.
+```
+
+### With PRLT_HQ_PATH set
+
+```bash
+export PRLT_HQ_PATH=/Users/you/my-project-hq
+prlt workspace list
+```
+
+Output includes:
+```
+Current PRLT_HQ_PATH:
+  /Users/you/my-project-hq
+```
+
+### Stale workspace warning
+
+If a registered workspace path no longer exists:
+
+```bash
+prlt workspace list
+```
+
+Output:
+```
+Registered workspaces:
+
+  ⚠ deleted-project (active)
+    Path no longer exists: /Users/you/deleted-project-hq
+```
+
+<Warning>
+Run `prlt init` to clean up stale entries.
+</Warning>
+
+## Workspace Sources
+
+### Registry
+
+Workspaces explicitly registered via:
+- `prlt new` - Automatic registration
+- `prlt workspace add` - Manual registration
+
+Stored in `~/.proletariat/config.json`.
+
+### Discovered
+
+Valid HQ workspaces found by walking up from the current directory. These are **not registered** but still recognized for backward compatibility.
+
+To register a discovered workspace:
+```bash
+prlt workspace add /path/to/discovered-hq
+```
+
+## Active Workspace Resolution
+
+Proletariat determines the active workspace in this order:
+
+1. **PRLT_HQ_PATH** environment variable (highest priority)
+2. **Machine config** active workspace (`~/.proletariat/config.json`)
+3. **Directory search** - Walk up from current directory to find `.proletariat/`
+
+## Output Fields
+
+### Human-readable
+
+- **Name** - Workspace name
+- **(active)** - Currently active workspace
+- **[via PRLT_HQ_PATH]** - Active via environment variable
+- **[has PMO]** / **[no PMO]** - PMO database status
+- **[not registered]** - Discovered but not in registry
+- **⚠** - Path no longer exists (stale)
+
+### JSON format
+
+<ResponseField name="workspaces" type="array">
+Array of workspace objects
+  <Expandable title="Workspace object">
+    <ResponseField name="name" type="string">
+    Workspace name
+    </ResponseField>
+    <ResponseField name="path" type="string">
+    Absolute path to workspace directory
+    </ResponseField>
+    <ResponseField name="active" type="boolean">
+    Whether this is the active workspace
+    </ResponseField>
+    <ResponseField name="exists" type="boolean">
+    Whether the path exists on disk
+    </ResponseField>
+    <ResponseField name="hasPMO" type="boolean">
+    Whether workspace has PMO database
+    </ResponseField>
+    <ResponseField name="registeredAt" type="string">
+    ISO timestamp when registered (registry only)
+    </ResponseField>
+    <ResponseField name="source" type="string">
+    `registry` or `discovered`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="activeWorkspace" type="string">
+Path to active workspace from machine config (may be null)
+</ResponseField>
+
+<ResponseField name="envOverride" type="string">
+Value of PRLT_HQ_PATH if set, otherwise null
+</ResponseField>
+
+## Exit Codes
+
+- `0` - Success (even if no workspaces found)
+
+## Related Commands
+
+- [`prlt new`](/commands/workspace/new) - Create new workspace
+- [`prlt workspace use`](/commands/workspace/use) - Switch active workspace
+- [`prlt workspace add`](/commands/workspace/add) - Register existing workspace
+- [`prlt workspace remove`](/commands/workspace/remove) - Unregister workspace
+- [`prlt init`](/commands/workspace/init) - Prune stale workspaces
+- [`prlt whoami`](/commands/whoami) - Show current workspace info
+
+## Notes
+
+<Tip>
+Use `prlt workspace list --json | jq '.workspaces[] | select(.active)'` to get the active workspace in scripts.
+</Tip>
+
+<Note>
+**Discovered vs Registered**: Discovered workspaces work but won't be remembered across directories. Register them with `prlt workspace add` for consistent access.
+</Note>

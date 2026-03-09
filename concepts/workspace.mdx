@@ -1,0 +1,317 @@
+---
+title: Workspace Structure
+description: Understanding the Proletariat workspace directory layout and database
+---
+
+A **workspace** (also called **HQ**) is the root directory where Proletariat manages your repositories, agents, and work state. Everything is organized in a predictable structure designed for multi-agent coordination.
+
+## Directory Structure
+
+```
+my-project/                    # Your workspace root (HQ)
+├── .proletariat/
+│   ├── workspace.db           # SQLite database (all state)
+│   └── config.json            # Workspace configuration
+├── repos/                     # Your source repositories (main)
+│   ├── frontend/
+│   ├── backend/
+│   └── infra/
+└── agents/                    # Agent workspaces
+    ├── staff/                 # Persistent named agents
+    │   ├── musk/              # Agent workspace
+    │   │   ├── frontend/      # Git worktree on branch: agent-musk
+    │   │   ├── backend/
+    │   │   └── infra/
+    │   └── gates/
+    │       ├── frontend/
+    │       ├── backend/
+    │       └── infra/
+    └── temp/                  # Ephemeral agents (auto-cleaned)
+        ├── bold-bezos-1/      # Working on TKT-042
+        │   ├── frontend/      # All repos on branch: feat/TKT-042-oauth
+        │   ├── backend/
+        │   └── infra/
+        └── keen-camry-2/      # Working on TKT-043
+            ├── frontend/      # All repos on branch: feat/TKT-043-api
+            ├── backend/
+            └── infra/
+```
+
+<Note>
+Each agent gets a **copy of all repositories** (repo scoping is coming soon). All repos in an agent's workspace are on the same branch.
+</Note>
+
+## The `.proletariat` Directory
+
+### workspace.db
+
+A SQLite database that stores all workspace state:
+
+- **Workspace metadata**: Type (HQ/workspace), name, active theme
+- **Repositories**: Paths, URLs, types
+- **Agents**: Names, types, worktree paths, themes
+- **Agent worktrees**: Per-repo branch mappings
+- **Projects, Epics, Tickets**: PMO data
+- **Workflows, Statuses, Phases**: Workflow configuration
+- **Executions**: Running agent sessions
+- **Themes**: Agent naming schemes
+
+```typescript
+// From drizzle-schema.ts
+export const workspace = sqliteTable('workspace', {
+  id: integer('id').primaryKey().$default(() => 1),
+  type: text('type', { enum: ['hq', 'workspace'] }).notNull(),
+  workspaceName: text('workspace_name').notNull(),
+  hasPmo: integer('has_pmo', { mode: 'boolean' }).default(false),
+  activeThemeId: text('active_theme_id'),
+  createdAt: text('created_at').notNull(),
+})
+```
+
+### config.json
+
+Minimal configuration file:
+
+```json
+{
+  "version": "1.0.0",
+  "schemaVersion": 1
+}
+```
+
+<Info>
+The database uses foreign keys and transactions to maintain consistency. Enable with `PRAGMA foreign_keys = ON`.
+</Info>
+
+## The `repos/` Directory
+
+Contains your source repositories on their main/master branches. These are the "source of truth" repos that agents fork from.
+
+Repositories are tracked in the database:
+
+```typescript
+export const repositories = sqliteTable('repositories', {
+  name: text('name').primaryKey(),
+  path: text('path').notNull(),
+  type: text('type', { enum: ['main', 'dependency'] }).default('main'),
+  sourceUrl: text('source_url'),
+  action: text('action', { enum: ['clone', 'move', 'link'] }),
+  addedAt: text('added_at').notNull(),
+})
+```
+
+**Adding repositories:**
+
+```bash
+prlt repo add https://github.com/you/frontend.git
+prlt repo add https://github.com/you/backend.git
+```
+
+## The `agents/` Directory
+
+### `agents/staff/` - Persistent Agents
+
+Named agents that persist across work sessions. Use for:
+
+- Long-running projects
+- Agents that need consistent identity
+- Testing and experimentation
+
+**Creating staff agents:**
+
+```bash
+prlt agent staff add musk gates bezos
+```
+
+Each staff agent gets:
+
+- A directory under `agents/staff/{name}/`
+- Git worktrees for all repos on branch `agent-{name}`
+- A persistent database record with `type: 'persistent'`
+
+### `agents/temp/` - Ephemeral Agents
+
+Auto-generated agents for individual tickets. Use for:
+
+- Feature development
+- Bug fixes
+- One-off tasks
+
+Created automatically when you spawn work:
+
+```bash
+prlt work start TKT-042
+# Creates agent: bold-bezos-1
+# Branch: feat/TKT-042-oauth
+```
+
+Ephemeral agents:
+
+- Are named with adjective-name-number pattern (e.g., `bold-bezos-1`)
+- Get cleaned up after work completes
+- Have database record with `type: 'ephemeral'` and `status: 'cleaned'` when done
+
+<Warning>
+Ephemeral agents in `agents/temp/` are subject to cleanup. Don't store important work there. Commit and push to preserve your changes.
+</Warning>
+
+## Git Worktrees
+
+Proletariat uses **git worktrees** to create isolated copies of repositories without duplicating the entire `.git` directory. This means:
+
+- Fast agent workspace creation
+- Shared git history and objects
+- Each agent on a different branch
+- No merge conflicts between agents
+
+**Worktree tracking:**
+
+```typescript
+export const agentWorktrees = sqliteTable('agent_worktrees', {
+  agentName: text('agent_name').notNull(),
+  repoName: text('repo_name').notNull(),
+  worktreePath: text('worktree_path').notNull(),
+  branch: text('branch').notNull(),
+  createdAt: text('created_at').notNull(),
+  lastCommitHash: text('last_commit_hash'),
+  commitsAhead: integer('commits_ahead').notNull().default(0),
+  isClean: integer('is_clean', { mode: 'boolean' }).notNull().default(true),
+  lastChecked: text('last_checked'),
+})
+```
+
+## Mount Modes
+
+Agents support two mount modes:
+
+### `worktree` (default)
+
+Uses git worktrees. Fast, efficient, shares `.git` objects.
+
+```bash
+prlt agent staff add musk --mount-mode worktree
+```
+
+### `clone`
+
+Creates independent clones. Use when you need full isolation or the repo doesn't support worktrees well.
+
+```bash
+prlt agent staff add gates --mount-mode clone
+```
+
+<Info>
+`mount_mode` is stored in the `agents` table. Defaults to `worktree` for backward compatibility.
+</Info>
+
+## Workspace Types
+
+There are two workspace types:
+
+### `hq`
+
+A full workspace with repos, agents, and project management. Most common use case.
+
+```bash
+prlt new  # Creates an HQ workspace
+```
+
+### `workspace`
+
+A standalone workspace without PMO features. Used for simpler setups.
+
+## Database Operations
+
+### Opening the database
+
+```typescript
+import { openWorkspaceDatabase } from './database'
+
+const db = openWorkspaceDatabase('/path/to/workspace')
+
+// Always enable foreign keys
+db.pragma('foreign_keys = ON')
+```
+
+### Querying agents
+
+```typescript
+const agents = db.prepare('SELECT * FROM agents WHERE status = ?').all('active')
+```
+
+### Transactions
+
+```typescript
+const transaction = db.transaction(() => {
+  db.prepare('INSERT INTO agents (...) VALUES (...)').run(...)
+  db.prepare('INSERT INTO agent_worktrees (...) VALUES (...)').run(...)
+})
+
+transaction() // Execute atomically
+```
+
+## Key Patterns
+
+### Agent Discovery
+
+Proletariat can discover agents on disk that aren't in the database:
+
+```bash
+prlt agent list  # Auto-discovers and registers agents
+```
+
+This scans `agents/staff/` and `agents/temp/` and adds any missing entries to the database.
+
+### Agent Cleanup
+
+Ephemeral agents are marked as `cleaned` rather than deleted:
+
+```typescript
+db.prepare(
+  "UPDATE agents SET status = 'cleaned', cleaned_at = ? WHERE name = ?"
+).run(now, agentName)
+```
+
+This preserves history while excluding them from active queries.
+
+### Case-Insensitive Names
+
+Agent names are stored with their original casing but compared case-insensitively:
+
+```sql
+SELECT name FROM agents WHERE LOWER(name) = LOWER(?)
+```
+
+## Summary
+
+<CardGroup cols={2}>
+  <Card title="Workspace Root" icon="folder">
+    HQ directory with `.proletariat/`, `repos/`, and `agents/`
+  </Card>
+  
+  <Card title="SQLite Database" icon="database">
+    All state in `workspace.db` with foreign keys enabled
+  </Card>
+  
+  <Card title="Staff Agents" icon="user">
+    Persistent agents in `agents/staff/` with stable names
+  </Card>
+  
+  <Card title="Temp Agents" icon="user-clock">
+    Ephemeral agents in `agents/temp/`, auto-cleaned after work
+  </Card>
+  
+  <Card title="Git Worktrees" icon="code-branch">
+    Isolated branches without duplicating .git
+  </Card>
+  
+  <Card title="Mount Modes" icon="link">
+    Choose `worktree` for speed or `clone` for full isolation
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- [Tickets & Epics](/concepts/tickets) - Structure work for agents
+- [Agents](/concepts/agents) - Staff vs temp agents and themes
+- [Execution Modes](/concepts/execution-modes) - Docker, host, terminal, background

@@ -1,0 +1,283 @@
+---
+title: prlt work start
+description: Start work on a ticket by launching an agent to implement it
+---
+
+## Usage
+
+```bash
+prlt work start [TICKET-ID] [OPTIONS]
+```
+
+Launches an AI agent to work on a ticket. Creates an ephemeral agent by default, or assigns work to an existing staff agent. Supports multiple execution environments (devcontainer, host) and display modes (foreground, terminal, background).
+
+## Arguments
+
+<ParamField path="TICKET-ID" type="string" optional>
+  Ticket ID to work on. If omitted, displays an interactive dropdown to select from available tickets.
+</ParamField>
+
+## Execution Mode Flags
+
+Control where and how the agent runs. See [Execution Modes](/concepts/execution-modes) for detailed explanations.
+
+<ParamField path="--run-on-host" type="boolean" default="false">
+  Run on host even if devcontainer exists (bypasses sandbox). By default, agents run in devcontainer if `.devcontainer/devcontainer.json` is present.
+</ParamField>
+
+<ParamField path="--display" type="string">
+  Display mode for agent output:
+  - `foreground` - Run in current terminal (blocking)
+  - `terminal` - Open in new terminal tab (recommended)
+  - `background` - Run detached, reattach with `prlt session attach`
+  
+  If omitted, prompts interactively.
+</ParamField>
+
+<ParamField path="--skip-permissions" type="boolean" default="false">
+  Skip permission checks (danger mode). Shorthand for `--permission-mode danger`. Allows agent to execute commands without approval prompts.
+</ParamField>
+
+<ParamField path="--permission-mode" type="string">
+  Permission mode for executor:
+  - `danger` - Skip permission checks (faster, use with containers for isolation)
+  - `safe` - Require approval for dangerous operations
+  
+  Cannot be used with `--skip-permissions` (they conflict).
+</ParamField>
+
+<ParamField path="--session" type="string" default="tmux">
+  Session manager inside container:
+  - `tmux` - Run agent in tmux inside container (allows reattach)
+  - `direct` - Run agent directly without session manager
+</ParamField>
+
+## Action Flags
+
+<ParamField path="--action" type="string">
+  Action for the agent to perform (e.g., `implement`, `groom`, `review`, `custom`). If omitted, prompts with available actions based on ticket status.
+  
+  Use `--action custom` with `--prompt` for custom instructions.
+</ParamField>
+
+<ParamField path="--prompt" type="string">
+  Custom prompt for the agent. Overrides any action prompt. Use this to give specific instructions beyond predefined actions.
+</ParamField>
+
+<ParamField path="--message" type="string">
+  Additional instructions appended to the action prompt. Useful for adding context like "Add unit tests" or "Use TypeScript strict mode".
+</ParamField>
+
+## Agent Selection
+
+<ParamField path="--agent" type="string">
+  Assign to a specific staff agent by name. Skips interactive agent selection. Agent must exist in workspace.
+</ParamField>
+
+<ParamField path="--ephemeral" type="boolean" default="false">
+  Create an ephemeral agent on-demand (auto-generates name). Ephemeral agents are temporary and cleaned up after work completes.
+</ParamField>
+
+## External Issue Integration
+
+<ParamField path="--from" type="string">
+  External issue reference in `provider:key` format (e.g., `linear:ENG-123`, `jira:PROJ-456`). Shorthand for `--from-issue --source X --key Y`.
+</ParamField>
+
+<ParamField path="--from-issue" type="boolean" default="false">
+  Start from external issue source instead of internal ticket ID. Requires `--source` and `--key`, or uses workspace active source.
+</ParamField>
+
+<ParamField path="--source" type="string">
+  External issue source: `linear` or `jira`. Used with `--from-issue` or `--from`.
+</ParamField>
+
+<ParamField path="--key" type="string">
+  External issue key (e.g., `ENG-123`, `PROJ-456`). Used with `--from-issue` and `--source`.
+</ParamField>
+
+<ParamField path="--mirror-to-pmo" type="boolean">
+  Mirror external issue data into PMO ticket. Default comes from `execution.mirror_to_pmo_default` config or `PRLT_MIRROR_TO_PMO_DEFAULT` environment variable.
+  
+  Use `--no-mirror-to-pmo` to explicitly disable mirroring.
+</ParamField>
+
+## Pull Request Options
+
+<ParamField path="--create-pr" type="boolean" default="false">
+  Create a pull request when work is ready. This is the canonical flag for PR behavior.
+</ParamField>
+
+<ParamField path="--no-pr" type="boolean" default="false" deprecated>
+  **Deprecated:** Skip PR creation when work is ready. Use `--create-pr` instead (PR creation is off by default).
+  
+  Cannot be used with `--create-pr`.
+</ParamField>
+
+## Display & Output
+
+<ParamField path="--watch" type="boolean" default="false">
+  Stream output in real-time (for foreground mode).
+</ParamField>
+
+<ParamField path="--output" type="string">
+  Output mode:
+  - `interactive` - Interactive UI with streaming updates
+  - `print` - Simple text output
+</ParamField>
+
+<ParamField path="--focus" type="boolean" default="false">
+  Bring terminal to foreground when opening new tabs. Default opens in background.
+</ParamField>
+
+## Git & Worktree Options
+
+<ParamField path="--clone" type="boolean" default="false">
+  Use independent git clone instead of worktree. Provides more isolation but no real-time sync with HQ.
+</ParamField>
+
+## Other Options
+
+<ParamField path="--force" type="boolean" default="false">
+  Start even if work already in progress or ticket is blocked. Allows parallel work sessions on the same ticket.
+</ParamField>
+
+<ParamField path="--yes" type="boolean" default="false">
+  Skip confirmation prompts (for non-TTY/scripted execution). Required for fully automated execution in JSON mode.
+</ParamField>
+
+<ParamField path="--executor" type="string">
+  Override executor: `claude-code`, `codex`, or `custom`. Defaults to workspace configuration.
+</ParamField>
+
+<ParamField path="--reconfigure" type="boolean" default="false">
+  Re-prompt for terminal app preference (clears saved preference).
+</ParamField>
+
+## Examples
+
+### Interactive Mode
+
+```bash
+# Prompt to select ticket
+prlt work start
+
+# Work on specific ticket (prompts for agent, action, display mode)
+prlt work start TKT-001
+```
+
+### Execution Modes
+
+```bash
+# Run in devcontainer with new terminal tab (recommended)
+prlt work start TKT-001 --display terminal
+
+# Run on host, bypassing devcontainer
+prlt work start TKT-001 --run-on-host --display terminal
+
+# Run in foreground (blocking, see output directly)
+prlt work start TKT-001 --display foreground
+
+# Run in background (detached)
+prlt work start TKT-001 --display background
+```
+
+### Permission Modes
+
+```bash
+# Skip permission checks (danger mode, faster)
+prlt work start TKT-001 --skip-permissions
+
+# Require approval for dangerous operations
+prlt work start TKT-001 --permission-mode safe
+
+# Safe mode is automatic for non-code-modifying actions
+prlt work start TKT-001 --action review  # Uses safe mode by default
+```
+
+### Actions & Prompts
+
+```bash
+# Use specific action
+prlt work start TKT-001 --action implement
+
+# Custom prompt
+prlt work start TKT-001 --prompt "Add unit tests for the API"
+
+# Action with additional instructions
+prlt work start TKT-001 --action implement --message "Use TypeScript strict mode"
+```
+
+### Agent Selection
+
+```bash
+# Create ephemeral agent (recommended)
+prlt work start TKT-001 --ephemeral
+
+# Assign to specific staff agent
+prlt work start TKT-001 --agent alice
+```
+
+### External Issues
+
+```bash
+# Start from Linear issue (shorthand)
+prlt work start --from linear:ENG-123
+
+# Start from Jira issue (shorthand)
+prlt work start --from jira:PROJ-456
+
+# Start from external issue with explicit flags
+prlt work start --from-issue --source linear --key ENG-123
+
+# Mirror external issue to PMO
+prlt work start --from linear:ENG-123 --mirror-to-pmo
+
+# Use workspace active source (no provider needed)
+prlt work start --from-issue
+```
+
+### Pull Requests
+
+```bash
+# Create PR when work is ready
+prlt work start TKT-001 --create-pr
+
+# Skip PR creation (default behavior)
+prlt work start TKT-001
+```
+
+### Batch/Automated Execution
+
+```bash
+# Fully automated execution (no prompts)
+prlt work start TKT-001 \
+  --action implement \
+  --ephemeral \
+  --display terminal \
+  --skip-permissions \
+  --yes
+
+# JSON mode for AI agents
+prlt work start TKT-001 \
+  --action implement \
+  --display terminal \
+  --run-on-host \
+  --skip-permissions \
+  --json \
+  --yes
+```
+
+## Related Commands
+
+- [`prlt work spawn`](/commands/work/spawn) - Batch spawn agents for multiple tickets
+- [`prlt work ready`](/commands/work/ready) - Mark work as ready for review
+- [`prlt work complete`](/commands/work/complete) - Mark work as complete
+- [`prlt session attach`](/commands/session/attach) - Reattach to running session
+- [`prlt action list`](/commands/action/list) - List available actions
+
+## See Also
+
+- [Execution Modes](/concepts/execution-modes) - Understanding display and environment modes
+- [Actions](/concepts/actions) - Predefined agent behaviors
+- [Agents](/concepts/agents) - Ephemeral vs. staff agents

@@ -1,0 +1,403 @@
+---
+title: prlt project list
+description: List all projects in your PMO workspace
+---
+
+Display all projects with their metadata, ticket counts, and status.
+
+## Basic Usage
+
+### List Active Projects
+
+Show all active (non-archived) projects:
+
+```bash
+prlt project list
+```
+
+Output:
+
+```
+Projects
+
+  Mobile App (default)
+    ID: mobile-app
+    Tickets: 12
+    Phase: Planning
+    iOS and Android app
+
+  Backend API
+    ID: backend-api
+    Tickets: 8
+    REST API for mobile app
+
+  Frontend Redesign
+    ID: frontend-redesign
+    Tickets: 5
+    Phase: Development
+    Complete UI/UX refresh
+
+(2 archived projects hidden. Use --archived to view)
+```
+
+## Flags
+
+<ParamField path="--archived" type="boolean" default="false">
+  Show only archived projects
+</ParamField>
+
+<ParamField path="-a" type="boolean">
+  Shorthand for --archived
+</ParamField>
+
+<ParamField path="--all" type="boolean" default="false">
+  Show all projects (including archived)
+</ParamField>
+
+<ParamField path="--json" type="boolean" default="false">
+  Output structured JSON for AI agents
+</ParamField>
+
+## Examples
+
+### All Projects
+
+Show both active and archived:
+
+```bash
+prlt project list --all
+```
+
+Output includes archived projects:
+
+```
+All Projects
+
+  Mobile App (default)
+    ID: mobile-app
+    Tickets: 12
+
+  Old Website (archived)
+    ID: old-website
+    Tickets: 0
+    Deprecated website
+```
+
+### Archived Only
+
+Show only archived projects:
+
+```bash
+prlt project list --archived
+```
+
+Output:
+
+```
+Archived Projects
+
+  Old Website (archived)
+    ID: old-website
+    Tickets: 0
+    Deprecated website
+
+  Prototype v1 (archived)
+    ID: prototype-v1
+    Tickets: 3
+    Initial prototype
+```
+
+### JSON Output
+
+For scripts and automation:
+
+```bash
+prlt project list --json
+```
+
+Output:
+
+```json
+{
+  "success": true,
+  "data": {
+    "projects": [
+      {
+        "id": "mobile-app",
+        "name": "Mobile App",
+        "description": "iOS and Android app",
+        "isArchived": false,
+        "isDefault": true,
+        "ticketCount": 12,
+        "phase": "Planning",
+        "phaseId": "planning"
+      },
+      {
+        "id": "backend-api",
+        "name": "Backend API",
+        "description": "REST API for mobile app",
+        "isArchived": false,
+        "isDefault": false,
+        "ticketCount": 8
+      }
+    ]
+  }
+}
+```
+
+## Project Information
+
+Each project displays:
+
+### Name
+
+Human-readable project name with markers:
+- **(default)**: Default project for new tickets
+- **(archived)**: Archived/inactive project
+
+### ID
+
+Project identifier used in commands:
+
+```bash
+prlt ticket list --project mobile-app
+```
+
+### Ticket Count
+
+Total tickets across all statuses (including done).
+
+### Phase
+
+Current project phase if set:
+- Planning
+- Development  
+- Testing
+- Deployment
+- Maintenance
+
+Set with:
+
+```bash
+prlt project update mobile-app --phase development
+```
+
+### Description
+
+Optional project description providing context.
+
+## Empty States
+
+### No Active Projects
+
+```bash
+prlt project list
+```
+
+Output:
+
+```
+No active projects found. Create one with: prlt project create
+
+(3 archived projects hidden. Use --archived to view)
+```
+
+### No Archived Projects
+
+```bash
+prlt project list --archived
+```
+
+Output:
+
+```
+No archived projects found.
+```
+
+### No Projects at All
+
+```bash
+prlt project list --all
+```
+
+Output:
+
+```
+No projects found. Create one with: prlt project create
+```
+
+## Use Cases
+
+### Quick Overview
+
+See all active work:
+
+```bash
+prlt project list
+```
+
+Shows:
+- Which projects have the most tickets
+- Current project phases
+- Default project
+
+### Find Project ID
+
+Get the ID for use in other commands:
+
+```bash
+prlt project list
+# Note the ID, then:
+prlt ticket list --project backend-api
+```
+
+### Review Archived Work
+
+Check completed projects:
+
+```bash
+prlt project list --archived
+```
+
+### Export Project List
+
+Generate project inventory:
+
+```bash
+prlt project list --all --json > projects.json
+```
+
+### Filter in Scripts
+
+Find projects with tickets:
+
+```bash
+prlt project list --json | jq '.data.projects[] | select(.ticketCount > 0)'
+```
+
+## Default Project
+
+The **default** project receives tickets when no project is specified:
+
+```bash
+# Creates ticket in default project
+prlt ticket create --title "Fix bug"
+```
+
+Set a different default:
+
+```bash
+prlt project set-default backend-api
+```
+
+## Project Lifecycle
+
+### Active Projects
+
+Default view shows active projects:
+
+```bash
+prlt project list
+```
+
+Active projects:
+- Accept new tickets
+- Appear in project selection prompts
+- Visible in board commands
+
+### Archived Projects
+
+View with `--archived` flag:
+
+```bash
+prlt project list --archived
+```
+
+Archived projects:
+- Hidden from default lists
+- Retain all tickets and data
+- Can be unarchived anytime
+
+**Archive a project:**
+
+```bash
+prlt project archive old-website
+```
+
+**Unarchive a project:**
+
+```bash
+prlt project unarchive old-website
+```
+
+## Filtering and Sorting
+
+### By Status
+
+Active only (default):
+
+```bash
+prlt project list
+```
+
+Archived only:
+
+```bash
+prlt project list --archived
+```
+
+All projects:
+
+```bash
+prlt project list --all
+```
+
+### By Ticket Count
+
+Using JSON output and jq:
+
+```bash
+prlt project list --json | \
+  jq -r '.data.projects | sort_by(.ticketCount) | reverse | .[]'
+```
+
+### By Phase
+
+Find development projects:
+
+```bash
+prlt project list --json | \
+  jq '.data.projects[] | select(.phase == "Development")'
+```
+
+## Tips
+
+<Tip>
+Run `prlt project list` regularly to track project health via ticket counts.
+</Tip>
+
+<Tip>
+Use JSON output for custom dashboards and reporting scripts.
+</Tip>
+
+<Tip>
+Archive completed projects to keep active list focused on current work.
+</Tip>
+
+<Warning>
+Ticket count includes tickets in all statuses (Backlog, In Progress, Done).
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Create Project" icon="plus" href="/commands/project/create">
+Create a new project
+</Card>
+
+<Card title="View Board" icon="table-columns" href="/commands/board/view">
+View project board and tickets
+</Card>
+
+</CardGroup>

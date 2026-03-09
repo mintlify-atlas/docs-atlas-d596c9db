@@ -1,0 +1,309 @@
+---
+title: prlt board
+description: View your project kanban board and watch for changes
+---
+
+Display your project's kanban board with all tickets organized by status column. Watch mode provides real-time updates.
+
+## Basic Usage
+
+### View Board
+
+Display the current board state:
+
+```bash
+prlt board
+```
+
+Output shows all columns with tickets:
+
+```
+My Project
+Storage: SQLite
+════════════════════════════════════════════════════════════
+
+📝 Backlog (3)
+──────────────────────────────────────────────────────────
+  TKT-001: Add OAuth support P1 feature
+     Implement Google and GitHub OAuth authentication
+     Spec: SPEC-001
+
+  TKT-002: Fix memory leak P0 bug
+     Memory leak in image processor
+     Subtasks: 2/5 (40%)
+
+  TKT-003: Update API docs P2 docs
+
+🚀 Ready (0)
+──────────────────────────────────────────────────────────
+  (empty)
+
+⚡ In Progress (1)
+──────────────────────────────────────────────────────────
+  TKT-004: Refactor auth flow P1 refactor
+
+✅ Done (2)
+──────────────────────────────────────────────────────────
+  TKT-005: Add rate limiting P1 feature
+  TKT-006: Fix login bug P0 bug
+
+════════════════════════════════════════════════════════════
+Total: 6 tickets
+Backlog: 3 | In Progress: 1 | Done: 2
+```
+
+### Compact View
+
+Show only ticket IDs and titles:
+
+```bash
+prlt board --compact
+```
+
+Output:
+
+```
+📝 Backlog (3)
+──────────────────────────────────────────────────────────
+  TKT-001: Add OAuth support P1
+  TKT-002: Fix memory leak P0
+  TKT-003: Update API docs P2
+```
+
+### Watch Mode
+
+Monitor board.md for changes and auto-sync to database:
+
+```bash
+prlt board watch
+```
+
+Output:
+
+```
+🔄 Board Watcher
+Storage: sqlite | Debounce: 500ms
+Path: /workspace/pmo
+Press Ctrl+C to stop
+
+[14:32:15] Watching board.md for changes...
+[14:33:42] File changed, syncing...
+[14:33:42] ✅ Synced 3 changes
+[14:35:18] File changed, syncing...
+[14:35:18] ✅ Synced 1 change
+```
+
+## Flags
+
+### Board View
+
+<ParamField path="--compact" type="boolean" default="false">
+  Show compact ticket view (ID and title only)
+</ParamField>
+
+<ParamField path="--project" type="string">
+  Project ID to view (prompts if multiple projects)
+</ParamField>
+
+<ParamField path="-P" type="string">
+  Shorthand for --project
+</ParamField>
+
+<ParamField path="--json" type="boolean" default="false">
+  Output board data as JSON for AI agents
+</ParamField>
+
+### Board Watch
+
+<ParamField path="--debounce" type="integer" default="500">
+  Debounce delay in milliseconds before syncing changes
+</ParamField>
+
+<ParamField path="-d" type="integer">
+  Shorthand for --debounce
+</ParamField>
+
+<ParamField path="--project" type="string">
+  Project ID to watch
+</ParamField>
+
+## Examples
+
+### View Specific Project
+
+```bash
+prlt board --project mobile-app
+```
+
+### Compact View with JSON
+
+```bash
+prlt board --compact --json
+```
+
+JSON output:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "mobile-app",
+    "name": "Mobile App",
+    "columns": [
+      {
+        "id": "backlog",
+        "name": "Backlog",
+        "position": 0,
+        "ticketCount": 3,
+        "tickets": [
+          {
+            "id": "TKT-001",
+            "title": "Add OAuth support",
+            "priority": "P1",
+            "category": "feature",
+            "statusName": "Backlog"
+          }
+        ]
+      }
+    ],
+    "totalTickets": 6
+  }
+}
+```
+
+### Watch with Custom Debounce
+
+Reduce sync frequency for large boards:
+
+```bash
+prlt board watch --debounce 2000
+```
+
+### Watch Specific Project
+
+```bash
+prlt board watch --project api-v2
+```
+
+## Use Cases
+
+### Quick Status Check
+
+View all work at a glance:
+
+```bash
+prlt board --compact
+```
+
+### Monitor Real-Time Updates
+
+Keep database in sync while editing board.md in Obsidian:
+
+```bash
+prlt board watch
+```
+
+Leave this running in a terminal while you:
+- Edit tickets in board.md
+- Move tickets between columns
+- Update ticket properties
+- Add new tickets
+
+Changes sync automatically to the SQLite database.
+
+### Board Review
+
+Full details for planning sessions:
+
+```bash
+prlt board
+```
+
+Shows:
+- Ticket descriptions (first line)
+- Subtask progress
+- Linked specs
+- Priority and category
+
+### Export for AI Agents
+
+Provide board state to automated systems:
+
+```bash
+prlt board --json > board-state.json
+```
+
+## Board Structure
+
+The board displays:
+
+**Column Header**: Status name with emoji and count
+
+**Ticket Card** (full view):
+- ID and title
+- Priority badge (P0-P3)
+- Category badge (feature, bug, etc.)
+- First line of description
+- Subtask progress if present
+- Linked spec if present
+
+**Ticket Card** (compact view):
+- ID and title only
+- Priority badge
+
+**Summary Footer**:
+- Total ticket count
+- Tickets per column
+
+## Watch Mode Details
+
+### How It Works
+
+1. **File Monitor**: Watches `pmo/projects/{project}/kanban.md`
+2. **Debounce**: Waits for edits to settle (default 500ms)
+3. **Parse**: Reads markdown and extracts ticket data
+4. **Diff**: Compares with SQLite database
+5. **Sync**: Applies changes to database
+
+### What Syncs
+
+- New tickets added to board.md
+- Tickets moved between columns
+- Ticket property changes (title, priority, etc.)
+- Tickets removed from board.md
+- Subtask completion status
+
+### Signal Handling
+
+Watch mode handles Ctrl+C gracefully:
+- Completes in-flight sync operations
+- Closes database connections
+- Exits cleanly
+
+## Tips
+
+<Tip>
+Use watch mode during planning sessions. Edit board.md in your editor while agents query the database in real-time.
+</Tip>
+
+<Tip>
+Compact view is ideal for terminal dashboards and quick status checks.
+</Tip>
+
+<Warning>
+Watch mode requires a TTY. It cannot run in JSON mode or non-interactive environments.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Move Tickets" icon="arrow-right" href="/commands/ticket/move">
+Move tickets between board columns
+</Card>
+
+<Card title="Create Tickets" icon="plus" href="/commands/ticket/create">
+Add new tickets to your board
+</Card>
+
+</CardGroup>

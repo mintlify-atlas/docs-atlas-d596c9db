@@ -1,0 +1,394 @@
+---
+title: 'prlt ticket list'
+description: 'List tickets from the PMO board'
+icon: 'list'
+---
+
+Display tickets from your PMO board with filtering and grouping options.
+
+## Usage
+
+<CodeGroup>
+
+```bash Default
+prlt ticket list
+```
+
+```bash Filter by Column
+prlt ticket list --column Backlog
+```
+
+```bash Search
+prlt ticket list --search "login"
+```
+
+```bash Group by Priority
+prlt ticket list --group-by priority
+```
+
+</CodeGroup>
+
+## Flags
+
+<ParamField path="--column" type="string">
+  Filter by column name.
+  
+  ```bash
+  prlt ticket list --column "In Progress"
+  ```
+</ParamField>
+
+<ParamField path="--priority" type="string">
+  Filter by priority (uses workspace priority scale).
+  
+  ```bash
+  prlt ticket list --priority P0
+  ```
+</ParamField>
+
+<ParamField path="--category" type="string">
+  Filter by category.
+  
+  ```bash
+  prlt ticket list --category bug
+  ```
+</ParamField>
+
+<ParamField path="--search" type="string">
+  Search in title and description.
+  
+  ```bash
+  prlt ticket list --search "authentication"
+  ```
+</ParamField>
+
+<ParamField path="--format" type="string" default="table">
+  Output format: `table`, `compact`, or `json`.
+  
+  ```bash
+  prlt ticket list --format compact
+  ```
+</ParamField>
+
+<ParamField path="--all" type="boolean" default="false">
+  Show tickets across all projects.
+  
+  ```bash
+  prlt ticket list --all
+  ```
+</ParamField>
+
+<ParamField path="--label" type="string">
+  Filter by label name.
+  
+  ```bash
+  prlt ticket list --label frontend
+  ```
+</ParamField>
+
+<ParamField path="--group-by" type="string" default="status">
+  Group tickets by field: `status` or `priority`.
+  
+  ```bash
+  prlt ticket list --group-by priority
+  ```
+</ParamField>
+
+<ParamField path="--limit" type="number">
+  Maximum number of tickets to display.
+  
+  ```bash
+  prlt ticket list --limit 10
+  ```
+</ParamField>
+
+<ParamField path="--offset" type="number">
+  Skip first N tickets (for pagination).
+  
+  ```bash
+  prlt ticket list --limit 10 --offset 20
+  ```
+</ParamField>
+
+<ParamField path="--project" type="string">
+  Filter by project ID.
+  
+  ```bash
+  prlt ticket list --project mobile-app
+  ```
+</ParamField>
+
+<ParamField path="--json" type="boolean">
+  Output as JSON (automatically enabled in non-TTY environments).
+  
+  ```bash
+  prlt ticket list --json
+  ```
+</ParamField>
+
+## Output Formats
+
+### Table Format (Default)
+
+Grouped view with full details:
+
+```
+📋 Backlog (3)
+──────────────────────────────────────────────────
+  TKT-001 Fix login bug [P1] [bug]
+     Fix authentication flow for OAuth users
+
+  TKT-002 Add dark mode [P2] [feature]
+     Implement dark mode theme
+     Subtasks: 2/5
+
+  TKT-003 Update docs [P3] [docs]
+     Document new API endpoints
+
+🚀 In Progress (1)
+──────────────────────────────────────────────────
+  TKT-004 Refactor auth [P1] [refactor]
+     Simplify authentication logic
+
+──────────────────────────────────────────────────
+Total: 4 tickets
+```
+
+### Compact Format
+
+Simple list view:
+
+```
+📋 Backlog (3):
+  TKT-001: Fix login bug [P1]
+  TKT-002: Add dark mode [P2]
+  TKT-003: Update docs [P3]
+
+🚀 In Progress (1):
+  TKT-004: Refactor auth [P1]
+```
+
+### JSON Format
+
+Machine-readable output:
+
+```json
+[
+  {
+    "id": "TKT-001",
+    "title": "Fix login bug",
+    "description": "Fix authentication flow for OAuth users",
+    "priority": "P1",
+    "category": "bug",
+    "statusName": "Backlog",
+    "statusCategory": "backlog",
+    "projectId": "mobile-app",
+    "projectName": "Mobile App",
+    "assignee": null,
+    "owner": null,
+    "epicId": null,
+    "labels": [],
+    "subtasks": [],
+    "position": 0,
+    "createdAt": "2024-03-09T10:30:00.000Z",
+    "updatedAt": "2024-03-09T10:30:00.000Z"
+  }
+]
+```
+
+## Grouping
+
+### Group by Status (Default)
+
+Tickets are grouped by their current column:
+
+```bash
+prlt ticket list --group-by status
+```
+
+### Group by Priority
+
+Tickets are grouped by priority level:
+
+```bash
+prlt ticket list --group-by priority
+```
+
+Output:
+
+```
+P0 (2)
+──────────────────────────────────────────────────
+  TKT-001 Critical bug [Backlog] [bug]
+  TKT-005 Security fix [In Progress] [security]
+
+P1 (3)
+──────────────────────────────────────────────────
+  TKT-002 Add feature [Backlog] [feature]
+  TKT-004 Refactor auth [In Progress] [refactor]
+  TKT-006 Fix API [Done] [bug]
+
+P2 (1)
+──────────────────────────────────────────────────
+  TKT-003 Update docs [Backlog] [docs]
+```
+
+## Examples
+
+### List All Tickets
+
+```bash
+prlt ticket list
+```
+
+### Filter by Column
+
+```bash
+prlt ticket list --column Backlog
+```
+
+### Filter by Priority
+
+```bash
+prlt ticket list --priority P0
+```
+
+### Filter by Category
+
+```bash
+prlt ticket list --category bug
+```
+
+### Search Tickets
+
+```bash
+prlt ticket list --search "login"
+```
+
+### Cross-Project View
+
+```bash
+prlt ticket list --all
+```
+
+Output shows project names:
+
+```
+Mobile App
+──────────────────────────────────────────────────
+  📋 Backlog (2)
+    TKT-001 Fix login bug [P1] [bug]
+    TKT-002 Add dark mode [P2] [feature]
+
+Web App
+──────────────────────────────────────────────────
+  📋 Backlog (1)
+    TKT-010 Update header [P3] [feature]
+```
+
+### Group by Priority Across Projects
+
+```bash
+prlt ticket list --all --group-by priority
+```
+
+### Paginate Results
+
+```bash
+# First page (10 items)
+prlt ticket list --limit 10
+
+# Second page (items 11-20)
+prlt ticket list --limit 10 --offset 10
+
+# Third page (items 21-30)
+prlt ticket list --limit 10 --offset 20
+```
+
+### Filter by Label
+
+```bash
+prlt ticket list --label frontend
+```
+
+### Compact View for Quick Scan
+
+```bash
+prlt ticket list --format compact
+```
+
+### JSON for Scripting
+
+```bash
+prlt ticket list --json | jq '.[] | select(.priority == "P0")'
+```
+
+## Ticket Display Fields
+
+The table format shows:
+
+- **Ticket ID**: Unique identifier
+- **Title**: Short description
+- **Priority**: Priority badge (e.g., [P1])
+- **Category**: Category badge (e.g., [bug])
+- **Description**: First line (truncated)
+- **Subtasks**: Progress count if present (e.g., "Subtasks: 2/5")
+
+In cross-project views, also shows:
+- **Project Name**: Which project the ticket belongs to
+- **Status**: Current column name (when grouped by priority)
+
+## Filtering Tips
+
+<AccordionGroup>
+
+<Accordion title="Combine multiple filters">
+  All filter flags can be combined:
+  
+  ```bash
+  prlt ticket list \
+    --category bug \
+    --priority P0 \
+    --column Backlog
+  ```
+</Accordion>
+
+<Accordion title="Search across all fields">
+  The `--search` flag searches in both title and description:
+  
+  ```bash
+  prlt ticket list --search "authentication"
+  ```
+</Accordion>
+
+<Accordion title="Use JSON mode for complex filtering">
+  Use `--json` with tools like `jq` for advanced filtering:
+  
+  ```bash
+  prlt ticket list --json | jq '.[] | select(.assignee == "agent-1")'
+  ```
+</Accordion>
+
+</AccordionGroup>
+
+## Related Commands
+
+<CardGroup cols={2}>
+
+<Card title="ticket create" icon="plus" href="/commands/ticket/create">
+  Create a new ticket
+</Card>
+
+<Card title="ticket view" icon="eye" href="/commands/ticket/view">
+  View detailed ticket information
+</Card>
+
+<Card title="board view" icon="table-columns" href="/commands/board/view">
+  View full board layout
+</Card>
+
+<Card title="ticket move" icon="arrows-turn-right" href="/commands/ticket/move">
+  Move tickets between columns
+</Card>
+
+</CardGroup>

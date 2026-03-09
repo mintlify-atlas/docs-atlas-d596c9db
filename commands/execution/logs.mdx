@@ -1,0 +1,387 @@
+---
+title: prlt execution logs
+description: View logs from agent work executions
+---
+
+Display logs from running or completed executions to monitor agent progress and debug issues.
+
+## Basic Usage
+
+### View Logs
+
+Show execution logs:
+
+```bash
+prlt execution logs WORK-023
+```
+
+Output:
+
+```
+📜 Logs for WORK-023 (TKT-042)
+   Log file: /workspace/.proletariat/logs/WORK-023.log
+
+[2024-03-09 14:30:15] Starting execution for TKT-042
+[2024-03-09 14:30:16] Agent: alice
+[2024-03-09 14:30:17] Environment: devcontainer
+[2024-03-09 14:30:20] Reading ticket description...
+[2024-03-09 14:30:25] Analyzing codebase...
+[2024-03-09 14:31:00] Creating auth middleware
+[2024-03-09 14:31:30] Running tests...
+[2024-03-09 14:32:00] ✓ All tests passing
+[2024-03-09 14:32:15] Committing changes...
+```
+
+### Interactive Selection
+
+Choose execution from list:
+
+```bash
+prlt execution logs
+```
+
+Prompts:
+```
+Select execution to view logs:
+  WORK-023 - TKT-042 (alice, running)
+  WORK-022 - TKT-041 (bob, completed)
+  WORK-021 - TKT-040 (charlie, running)
+```
+
+## Flags
+
+<ParamField path="--follow" type="boolean" default="false">
+  Stream logs in real-time (like tail -f)
+</ParamField>
+
+<ParamField path="-f" type="boolean">
+  Shorthand for --follow
+</ParamField>
+
+<ParamField path="--tail" type="integer">
+  Show last n lines only
+</ParamField>
+
+<ParamField path="-n" type="integer">
+  Shorthand for --tail
+</ParamField>
+
+<ParamField path="--json" type="boolean" default="false">
+  Output structured JSON (for interactive selection)
+</ParamField>
+
+## Arguments
+
+<ParamField path="id" type="string">
+  Execution ID (WORK-XXX). Prompts if not provided.
+</ParamField>
+
+## Examples
+
+### Follow Logs
+
+Stream logs in real-time:
+
+```bash
+prlt execution logs WORK-023 --follow
+```
+
+Output updates live:
+
+```
+📜 Logs for WORK-023 (TKT-042)
+   Log file: /workspace/.proletariat/logs/WORK-023.log
+
+[14:30:15] Starting execution
+[14:30:20] Reading ticket...
+[14:31:00] Creating files...
+[14:31:30] Running tests...
+[14:32:00] ✓ Tests passing
+[14:32:15] Committing...
+```
+
+Press Ctrl+C to stop following.
+
+### Last N Lines
+
+Show most recent output:
+
+```bash
+prlt execution logs WORK-023 --tail 50
+```
+
+Displays last 50 lines of log file.
+
+### Tail and Follow
+
+Combine for live recent logs:
+
+```bash
+prlt execution logs WORK-023 --tail 100 --follow
+```
+
+Shows last 100 lines, then streams new output.
+
+## Log File Locations
+
+### Host Execution
+
+Logs stored locally:
+```
+/workspace/.proletariat/logs/WORK-023.log
+```
+
+### Devcontainer Execution
+
+Logs inside container:
+```
+/workspace/.proletariat/logs/WORK-023.log
+```
+
+Access via:
+```bash
+prlt execution logs WORK-023
+```
+
+### No Log File
+
+Some executions don't have log files:
+
+```bash
+prlt execution logs WORK-023
+```
+
+Output:
+
+```
+No log file for execution WORK-023
+Environment: devcontainer
+
+View in tmux:
+  tmux attach -t prlt-alice-work-023
+```
+
+or for docker:
+
+```
+No log file for execution WORK-023
+Environment: docker
+
+View docker logs:
+  docker logs -f abc123def456
+```
+
+## Log Content
+
+### Timestamps
+
+All log entries include timestamps:
+```
+[2024-03-09 14:30:15] Starting execution
+[2024-03-09 14:30:20] Reading ticket description
+```
+
+### Agent Output
+
+Agent's thoughts and actions:
+```
+[14:30:25] Analyzing ticket requirements...
+[14:30:30] I need to create an auth middleware
+[14:30:35] Looking for existing patterns...
+```
+
+### Command Execution
+
+Commands run by agent:
+```
+[14:31:00] Running: npm test
+[14:31:15] ✓ auth.test.ts passed
+[14:31:20] Running: git add src/middleware/auth.ts
+```
+
+### Error Messages
+
+Failures and errors:
+```
+[14:32:00] Error: Test failed
+[14:32:01] Expected 200, got 401
+[14:32:02] Analyzing failure...
+```
+
+### Completion Status
+
+Final outcome:
+```
+[14:35:00] ✓ All acceptance criteria met
+[14:35:05] Committing changes
+[14:35:10] Execution completed successfully
+```
+
+## Error Handling
+
+### Execution Not Found
+
+```bash
+prlt execution logs WORK-999
+```
+
+Output:
+```
+Execution "WORK-999" not found.
+```
+
+### Log File Missing
+
+For executions without log files:
+
+```
+No log file for execution WORK-023
+Environment: devcontainer
+
+Error:
+  Container failed to start: port 3000 already in use
+
+View in tmux:
+  tmux attach -t prlt-alice-work-023
+```
+
+## Use Cases
+
+### Monitor Progress
+
+Watch agent work in real-time:
+
+```bash
+prlt execution logs WORK-023 --follow
+```
+
+See:
+- What agent is thinking
+- Commands being executed
+- Test results
+- Progress toward completion
+
+### Debug Failures
+
+Investigate failed executions:
+
+```bash
+prlt execution list --status failed
+prlt execution logs WORK-020
+```
+
+Find:
+- Error messages
+- Stack traces
+- Failed commands
+- Last successful action
+
+### Audit Changes
+
+Review what agent did:
+
+```bash
+prlt execution logs WORK-022 --tail 200
+```
+
+See:
+- Files modified
+- Commands executed
+- Tests run
+- Commits made
+
+### Quick Check
+
+Last few lines of active work:
+
+```bash
+prlt execution logs WORK-023 --tail 10
+```
+
+Shows current activity without full history.
+
+## Alternative Access
+
+### Tmux Sessions
+
+For tmux display mode, attach directly:
+
+```bash
+tmux attach -t prlt-alice-work-023
+```
+
+Provides:
+- Live terminal view
+- Full interactivity
+- Scroll back buffer
+- Multiple panes
+
+Detach: Press `Ctrl+B`, then `D`
+
+### Docker Logs
+
+For docker containers:
+
+```bash
+docker logs -f abc123def456
+```
+
+Or use wrapper:
+
+```bash
+prlt docker logs WORK-023 --follow
+```
+
+## Performance
+
+### Tail for Speed
+
+Large log files slow down display:
+
+```bash
+prlt execution logs WORK-023 --tail 100
+```
+
+Faster than reading entire file.
+
+### Follow Mode
+
+Efficient streaming:
+
+```bash
+prlt execution logs WORK-023 --follow
+```
+
+Uses `tail -f` for minimal overhead.
+
+## Tips
+
+<Tip>
+Use `--follow` to watch agents work in real-time. Great for learning agent behavior.
+</Tip>
+
+<Tip>
+Combine `--tail 50 --follow` to skip old logs and watch current activity.
+</Tip>
+
+<Tip>
+For failed executions, check the last 20-30 lines first to find the error quickly.
+</Tip>
+
+<Warning>
+Ctrl+C stops following logs but doesn't stop the execution. Use `prlt execution stop` to halt work.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="List Executions" icon="list" href="/commands/execution/list">
+View all running and recent executions
+</Card>
+
+<Card title="Stop Execution" icon="stop" href="/commands/execution/stop">
+Stop a running execution
+</Card>
+
+</CardGroup>

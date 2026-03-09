@@ -1,0 +1,471 @@
+---
+title: Parallel Agents
+description: Work on multiple tickets simultaneously with isolated agent workspaces
+---
+
+One of Proletariat's superpowers is spawning multiple agents to work in parallel. Each agent gets its own branch and workspace, eliminating conflicts.
+
+## Why Parallel?
+
+**Traditional workflow:**
+- Work on one ticket at a time
+- Context switch between tasks
+- Wait for reviews before starting next item
+- Slow iteration cycles
+
+**Parallel workflow:**
+- Spawn agents for multiple tickets
+- Each works independently
+- All PRs ready simultaneously
+- Review and merge in batches
+
+## Basic Parallel Spawning
+
+### Specific Tickets
+
+Spawn agents for specific ticket IDs:
+
+```bash
+prlt work spawn TKT-001 TKT-002 TKT-003
+```
+
+Each agent:
+- Creates its own branch (e.g., `feat/TKT-001-oauth`, `feat/TKT-002-rate-limit`)
+- Gets isolated workspace (Docker container or git worktree)
+- Works independently
+- Creates its own PR
+
+### Interactive Selection
+
+Choose tickets interactively:
+
+```bash
+prlt work spawn --many
+```
+
+You'll see a checkbox list of tickets. Select multiple with Space, confirm with Enter.
+
+### By Column
+
+Spawn all tickets in a specific column:
+
+```bash
+prlt work spawn --all --column Backlog
+```
+
+This spawns agents for every ticket in "Backlog".
+
+### By Count
+
+Spawn the top N tickets:
+
+```bash
+prlt work spawn --count 5
+```
+
+Selects the 5 highest-priority tickets based on board position.
+
+## Advanced Selection
+
+### With Filters
+
+Combine count with filters:
+
+```bash
+# Top 10 bugs
+prlt work spawn --count 10 --category bug
+
+# Top 5 P0 tickets
+prlt work spawn --count 5 --priority P0
+
+# All tickets in epic
+prlt work spawn --epic EPIC-001
+
+# Specific status
+prlt work spawn --all --status "Ready"
+```
+
+### Diet-Balanced Selection
+
+Balance across category weights:
+
+```bash
+prlt work spawn --count 10 --diet
+```
+
+This respects your workspace diet config (e.g., 60% ship, 20% grow, 20% ops) and selects tickets proportionally.
+
+Example with 10 tickets and 60/20/20 diet:
+- 6 tickets from `ship` category
+- 2 tickets from `grow` category
+- 2 tickets from `ops` category
+
+<Note>
+Set diet config with `prlt diet set ship:60,grow:20,ops:20`
+</Note>
+
+### Combined Filters
+
+Stack multiple filters:
+
+```bash
+prlt work spawn --count 10 --diet --category ship,grow --priority P0,P1
+```
+
+This:
+1. Filters to `ship` and `grow` categories
+2. Filters to P0 and P1 priority
+3. Applies diet balancing
+4. Selects top 10
+
+## Execution Options
+
+### Background Mode
+
+Best for parallel spawning:
+
+```bash
+prlt work spawn TKT-001 TKT-002 TKT-003 --display background
+```
+
+Agents run in detached tmux sessions. Monitor with:
+
+```bash
+prlt execution list
+```
+
+### Docker + YOLO
+
+Full automation, safely sandboxed:
+
+```bash
+prlt work spawn TKT-001 TKT-002 TKT-003 --skip-permissions
+```
+
+Each agent:
+- Runs in isolated Docker container
+- Has full autonomy (no permission prompts)
+- Safely sandboxed from host
+
+### With Action
+
+Specify what agents should do:
+
+```bash
+prlt work spawn TKT-001 TKT-002 TKT-003 --action implement
+```
+
+Actions:
+- `implement` - Write code
+- `groom` - Refine requirements
+- `review` - Review code
+- `custom` - Custom prompt
+
+### Auto-PR Creation
+
+Create PRs when work is ready:
+
+```bash
+prlt work spawn TKT-001 TKT-002 TKT-003 --create-pr
+```
+
+<Tip>
+Combine with `--skip-permissions` for fully automated parallel development:
+
+```bash
+prlt work spawn --count 10 --action implement --skip-permissions --create-pr --display background
+```
+</Tip>
+
+## Managing Parallel Work
+
+### View All Running Agents
+
+```bash
+prlt execution list
+```
+
+Output:
+
+```
+┌──────────────┬──────────┬──────────────┬────────────┬──────────────────┐
+│ Execution ID │ Ticket   │ Agent        │ Status     │ Started          │
+├──────────────┼──────────┼──────────────┼────────────┼──────────────────┤
+│ exec-abc     │ TKT-001  │ bold-bezos-1 │ running    │ 2m ago           │
+│ exec-def     │ TKT-002  │ keen-gates-1 │ running    │ 2m ago           │
+│ exec-ghi     │ TKT-003  │ wise-musk-1  │ running    │ 2m ago           │
+└──────────────┴──────────┴──────────────┴────────────┴──────────────────┘
+```
+
+### Monitor Progress
+
+**Watch the board:**
+
+```bash
+prlt board watch
+```
+
+See tickets move through columns in real-time as agents work.
+
+**View specific agent:**
+
+```bash
+prlt execution logs exec-abc
+```
+
+**Attach to agent session:**
+
+```bash
+prlt agent shell bold-bezos-1
+```
+
+### Stop Agents
+
+**Stop one execution:**
+
+```bash
+prlt execution stop exec-abc
+```
+
+**Stop all:**
+
+```bash
+prlt execution list --json | jq -r '.[].id' | xargs -I {} prlt execution stop {}
+```
+
+## Scaling Considerations
+
+### Machine Limits
+
+How many agents can you run?
+
+**Docker mode:**
+- ~5-10 agents on typical laptop
+- ~20-50 agents on desktop/server
+- Depends on: CPU cores, RAM, disk speed
+
+**Host mode:**
+- ~10-20 agents (faster than Docker)
+- Limited by: tmux overhead, disk I/O
+
+<Warning>
+Each Docker container uses ~2GB RAM. Monitor with `docker stats`.
+</Warning>
+
+### Best Practices
+
+<AccordionGroup>
+
+<Accordion title="Start small, scale up">
+  Test with 2-3 agents first. Once stable, increase to 5-10.
+</Accordion>
+
+<Accordion title="Use background mode">
+  Terminal mode is resource-intensive for many agents. Use `--display background`.
+</Accordion>
+
+<Accordion title="Clean up containers">
+  Stopped containers consume disk space:
+  ```bash
+  prlt docker clean
+  prlt docker prune
+  ```
+</Accordion>
+
+<Accordion title="Monitor system resources">
+  Keep an eye on CPU, RAM, and disk:
+  ```bash
+  docker stats
+  htop
+  ```
+</Accordion>
+
+<Accordion title="Use ephemeral agents">
+  Ephemeral agents are auto-cleaned. Staff agents persist and use more disk.
+</Accordion>
+
+</AccordionGroup>
+
+## Common Patterns
+
+### Bug Bash
+
+Spawn agents for all bugs:
+
+```bash
+prlt work spawn --all --category bug --action implement --display background
+```
+
+### Sprint Kickoff
+
+Spawn top sprint tickets:
+
+```bash
+prlt work spawn --count 20 --action implement --skip-permissions --create-pr
+```
+
+### Grooming Session
+
+Refine vague tickets in parallel:
+
+```bash
+prlt work spawn --count 10 --action groom --column Backlog
+```
+
+### Feature Development
+
+Work on epic in parallel:
+
+```bash
+prlt work spawn --epic EPIC-001 --action implement --display background
+```
+
+### Review All PRs
+
+Spawn agents to review open PRs:
+
+```bash
+prlt work spawn --column "In Review" --action review
+```
+
+## Isolation & Conflicts
+
+### How Isolation Works
+
+**Each agent gets:**
+- Unique git branch (e.g., `feat/TKT-001-oauth`)
+- Isolated workspace (Docker container or git worktree)
+- Independent execution environment
+- Separate tmux session
+
+**No conflicts because:**
+- Agents never touch same branch
+- Workspaces are isolated on disk
+- PRs are independent
+
+### When Conflicts Happen
+
+**Merge conflicts** can occur when:
+- Two agents modify same file
+- PRs are merged in sequence
+- Branches diverge from main
+
+**Resolution:**
+1. Merge first PR
+2. Rebase second PR
+3. Resolve conflicts manually
+4. Merge second PR
+
+**Prevention:**
+- Break work into independent modules
+- Merge PRs frequently
+- Keep tickets focused and small
+
+## Monitoring & Debugging
+
+### View All Agents
+
+```bash
+# Running agents
+prlt agent list --type temp
+
+# All executions (including completed)
+prlt execution list --all
+```
+
+### Logs
+
+**Tail logs for all agents:**
+
+```bash
+for exec in $(prlt execution list --json | jq -r '.[].id'); do
+  echo "=== $exec ==="
+  prlt execution logs $exec --tail 10
+done
+```
+
+**Watch single agent:**
+
+```bash
+prlt execution logs exec-abc --follow
+```
+
+### GitHub PRs
+
+View all agent-created PRs:
+
+```bash
+gh pr list --label proletariat
+```
+
+<Tip>
+Agents tag PRs with `proletariat` label. Filter by this in GitHub.
+</Tip>
+
+## Cleanup
+
+### Remove Ephemeral Agents
+
+After work completes:
+
+```bash
+prlt agent temp cleanup
+```
+
+Removes:
+- Stopped ephemeral agents
+- Old worktrees
+- Temporary workspaces
+
+### Prune Docker Resources
+
+```bash
+prlt docker prune
+```
+
+Removes:
+- Stopped containers
+- Unused images
+- Dangling volumes
+
+## JSON Mode for AI Agents
+
+Use `--json` flag for AI-driven parallel spawning:
+
+```bash
+prlt work spawn --json --count 10
+```
+
+Returns:
+
+```json
+{
+  "prompt": {
+    "type": "list",
+    "message": "Ready to spawn 10 agents. Confirm?",
+    "choices": [
+      {
+        "name": "Yes",
+        "value": "yes",
+        "command": "prlt work spawn TKT-001 TKT-002 ... --yes --json"
+      }
+    ]
+  }
+}
+```
+
+AI agent can parse and execute the command.
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Using Themes" icon="palette" href="/guides/using-themes">
+Customize agent names with themes
+</Card>
+
+<Card title="JSON Mode" icon="code" href="/guides/json-mode">
+Integrate Proletariat with AI agents
+</Card>
+
+</CardGroup>

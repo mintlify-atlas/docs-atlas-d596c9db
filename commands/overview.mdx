@@ -1,0 +1,164 @@
+---
+title: Commands Overview
+description: Complete reference for all Proletariat CLI commands
+---
+
+The Proletariat CLI (`prlt`) provides a comprehensive set of commands organized into logical namespaces.
+
+## Command Namespaces
+
+<CardGroup cols={2}>
+
+<Card title="Workspace" icon="house" href="/commands/workspace/init">
+Initialize and manage HQ workspaces
+</Card>
+
+<Card title="Ticket" icon="ticket" href="/commands/ticket/create">
+Create and manage work tickets
+</Card>
+
+<Card title="Work" icon="play" href="/commands/work/spawn">
+Spawn agents and manage executions
+</Card>
+
+<Card title="Agent" icon="robot" href="/commands/agent/list">
+Manage agent workspaces and containers
+</Card>
+
+<Card title="Board" icon="table-columns" href="/commands/board/view">
+View and manage Kanban boards
+</Card>
+
+<Card title="Epic" icon="layer-group" href="/commands/epic/create">
+Organize tickets into epics
+</Card>
+
+<Card title="Project" icon="folder" href="/commands/project/create">
+Create and manage projects
+</Card>
+
+<Card title="Execution" icon="terminal" href="/commands/execution/list">
+Monitor and control running agents
+</Card>
+
+<Card title="Docker" icon="docker" href="/commands/docker/list">
+Manage Docker containers for agents
+</Card>
+
+</CardGroup>
+
+## Core Commands
+
+These commands are available at the root level:
+
+- [`prlt init`](/commands/workspace/init) - Initialize machine-level configuration
+- [`prlt new`](/commands/workspace/new) - Create a new HQ workspace
+- `prlt whoami` - Display current workspace and agent info
+- `prlt ps` - Show running executions (alias for `execution list`)
+
+## Global Flags
+
+All commands support these global flags:
+
+<ParamField path="--help" type="boolean">
+Show help for the command
+</ParamField>
+
+<ParamField path="--version" type="boolean">
+Show CLI version
+</ParamField>
+
+<ParamField path="--json" type="boolean">
+Output in JSON format for AI agent consumption
+</ParamField>
+
+<ParamField path="--machine" type="boolean">
+Alias for `--json`
+</ParamField>
+
+## JSON Mode
+
+Most commands support `--json` mode for AI agent orchestration. When enabled:
+
+- Interactive prompts return JSON prompt configs instead of blocking
+- Output is structured and parseable
+- AI agents can navigate command flows programmatically
+
+```bash
+prlt ticket create --json
+```
+
+Returns:
+```json
+{
+  "prompt": {
+    "type": "input",
+    "name": "title",
+    "message": "Enter ticket title:"
+  },
+  "metadata": {
+    "command": "ticket create",
+    "flags": {}
+  }
+}
+```
+
+See the [JSON Mode guide](/guides/json-mode) for details.
+
+## Exit Codes
+
+All commands follow standard Unix exit code conventions:
+
+- `0` - Success
+- `1` - General error
+- `2` - Invalid usage (missing arguments, invalid flags)
+
+## Environment Variables
+
+<ParamField path="PRLT_HQ_PATH" type="string">
+Override the active workspace path
+</ParamField>
+
+<ParamField path="GITHUB_TOKEN" type="string">
+GitHub personal access token for PR creation
+</ParamField>
+
+<ParamField path="ANTHROPIC_API_KEY" type="string">
+Anthropic API key for Claude integration
+</ParamField>
+
+<ParamField path="PRLT_LOG_LEVEL" type="string">
+Log level: `debug`, `info`, `warn`, `error`
+</ParamField>
+
+## Command Aliases
+
+Many commands have short aliases for convenience:
+
+| Command | Alias |
+|---------|-------|
+| `prlt ticket` | `prlt tkt` |
+| `prlt execution` | `prlt exec` |
+| `prlt agent` | `prlt agents` |
+| `prlt action` | `prlt actions` |
+| `prlt execution list` | `prlt ps` |
+
+## Getting Help
+
+For command-specific help:
+
+```bash
+prlt <command> --help
+```
+
+For interactive command menus:
+
+```bash
+prlt <namespace>
+```
+
+Example:
+```bash
+prlt agent
+# Shows interactive menu with all agent commands
+```

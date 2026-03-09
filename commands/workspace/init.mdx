@@ -1,0 +1,134 @@
+---
+title: prlt init
+description: Initialize machine-level Proletariat configuration
+---
+
+## Usage
+
+```bash
+prlt init [--json]
+```
+
+## Description
+
+Initializes the machine-level Proletariat configuration directory at `~/.proletariat`. This command:
+
+1. Creates the `~/.proletariat` directory if it doesn't exist
+2. Creates or validates the machine config file (`~/.proletariat/config.json`)
+3. Prunes stale HQ entries (paths that no longer exist)
+4. Clears the active workspace if it was pruned
+
+You typically run this once after installing the CLI, though it's safe to run multiple times.
+
+## Flags
+
+<ParamField path="--json" type="boolean" default="false">
+Output results in JSON format instead of human-readable text
+</ParamField>
+
+<ParamField path="--machine" type="boolean" default="false">
+Alias for `--json`
+</ParamField>
+
+## Examples
+
+### Initialize configuration
+
+```bash
+prlt init
+```
+
+Output:
+```
+Machine configuration initialized.
+  Config: /Users/you/.proletariat/config.json
+  Registered HQs: 0
+
+No headquarters found. Create one with:
+  prlt new
+```
+
+### Initialize with existing HQs
+
+```bash
+prlt init
+```
+
+Output:
+```
+Machine configuration initialized.
+  Config: /Users/you/.proletariat/config.json
+  Registered HQs: 3
+```
+
+### JSON output
+
+```bash
+prlt init --json
+```
+
+Output:
+```json
+{
+  "success": true,
+  "configDir": "/Users/you/.proletariat",
+  "configPath": "/Users/you/.proletariat/config.json",
+  "headquarters": 3,
+  "prunedStaleEntries": 0,
+  "activeHeadquarters": "/Users/you/my-project-hq"
+}
+```
+
+### Prune stale entries
+
+If you've deleted HQ directories manually:
+
+```bash
+prlt init
+```
+
+Output:
+```
+Machine configuration initialized.
+  Config: /Users/you/.proletariat/config.json
+  Registered HQs: 2
+  Pruned 1 stale HQ entries
+```
+
+## Machine Config Structure
+
+The machine config file (`~/.proletariat/config.json`) stores:
+
+```json
+{
+  "headquarters": [
+    {
+      "name": "my-project",
+      "path": "/Users/you/my-project-hq",
+      "registeredAt": "2026-03-09T12:00:00.000Z"
+    }
+  ],
+  "activeHeadquarters": "/Users/you/my-project-hq"
+}
+```
+
+## Exit Codes
+
+- `0` - Success
+- `1` - Error creating or accessing config directory
+
+## Related Commands
+
+- [`prlt new`](/commands/workspace/new) - Create a new HQ workspace
+- [`prlt workspace list`](/commands/workspace/list) - List all registered workspaces
+- [`prlt workspace use`](/commands/workspace/use) - Switch active workspace
+
+## Notes
+
+<Note>
+This command is idempotent - safe to run multiple times.
+</Note>
+
+<Warning>
+Deleting `~/.proletariat/config.json` will lose your workspace registry. Run `prlt init` to recreate it, but you'll need to re-add workspaces with `prlt workspace add`.
+</Warning>

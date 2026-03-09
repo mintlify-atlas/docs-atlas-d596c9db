@@ -1,0 +1,328 @@
+---
+title: 'prlt ticket create'
+description: 'Create a new ticket on the PMO board'
+icon: 'plus'
+---
+
+Create a new ticket for tracking work items in your project.
+
+## Usage
+
+<CodeGroup>
+
+```bash Interactive Mode
+prlt ticket create
+```
+
+```bash CLI Mode
+prlt ticket create --title "Fix login bug" --column Backlog
+```
+
+```bash With All Options
+prlt ticket create \
+  --title "Add OAuth support" \
+  --description "Implement Google and GitHub OAuth" \
+  --priority P1 \
+  --category feature \
+  --column Backlog \
+  --project mobile-app
+```
+
+</CodeGroup>
+
+## Flags
+
+<ParamField path="--title" type="string" required>
+  Ticket title. Required for non-interactive mode.
+  
+  ```bash
+  prlt ticket create --title "Fix login bug"
+  ```
+</ParamField>
+
+<ParamField path="--column" type="string">
+  Column to place the ticket in (e.g., Backlog, In Progress, Done).
+  
+  ```bash
+  prlt ticket create --title "My ticket" --column Backlog
+  ```
+</ParamField>
+
+<ParamField path="--priority" type="string">
+  Ticket priority. Uses your workspace priority scale (default: P0-P3).
+  
+  ```bash
+  prlt ticket create --title "Critical fix" --priority P0
+  ```
+</ParamField>
+
+<ParamField path="--category" type="string">
+  Ticket category (e.g., bug, feature, refactor, docs, test, chore).
+  
+  ```bash
+  prlt ticket create --title "Add feature" --category feature
+  ```
+</ParamField>
+
+<ParamField path="--description" type="string">
+  Ticket description. Mutually exclusive with `--description-file`.
+  
+  ```bash
+  prlt ticket create --title "My ticket" --description "Fix the login flow"
+  ```
+</ParamField>
+
+<ParamField path="--description-file" type="string">
+  Path to a markdown file for the ticket description. Use `-` for stdin.
+  
+  ```bash
+  prlt ticket create --title "My ticket" --description-file ./ticket-desc.md
+  echo "Description" | prlt ticket create --title "My ticket" --description-file -
+  ```
+</ParamField>
+
+<ParamField path="--id" type="string">
+  Custom ticket ID. Auto-generated if not provided.
+  
+  ```bash
+  prlt ticket create --title "My ticket" --id AUTH-042
+  ```
+</ParamField>
+
+<ParamField path="--interactive" type="boolean" default="false">
+  Force interactive mode with all prompts.
+  
+  ```bash
+  prlt ticket create --interactive
+  ```
+</ParamField>
+
+<ParamField path="--epic" type="string">
+  Link ticket to an epic (e.g., EPIC-001).
+  
+  ```bash
+  prlt ticket create --title "Implement auth flow" --epic EPIC-001
+  ```
+</ParamField>
+
+<ParamField path="--template" type="string">
+  Create from a template (e.g., bug-report, feature-request).
+  
+  ```bash
+  prlt ticket create --template bug-report
+  ```
+</ParamField>
+
+<ParamField path="--labels" type="string">
+  Comma-separated labels to add to the ticket.
+  
+  ```bash
+  prlt ticket create --title "My ticket" --labels "frontend,urgent"
+  ```
+</ParamField>
+
+<ParamField path="--dry-run" type="boolean" default="false">
+  Validate inputs without creating the ticket. Use with `--json` for structured output.
+  
+  ```bash
+  prlt ticket create --title "Test" --dry-run --json
+  ```
+</ParamField>
+
+<ParamField path="--project" type="string">
+  Project ID to create the ticket in.
+  
+  ```bash
+  prlt ticket create --title "My ticket" --project mobile-app
+  ```
+</ParamField>
+
+<ParamField path="--json" type="boolean">
+  Output response as JSON for machine parsing.
+  
+  ```bash
+  prlt ticket create --title "My ticket" --column Backlog --json
+  ```
+</ParamField>
+
+## Interactive Mode
+
+When run without flags, the command enters interactive mode with guided prompts:
+
+1. **Template Selection** - Choose from available templates or start blank
+2. **Title** - Enter the ticket title
+3. **Column** - Select which column to place the ticket in
+4. **Priority** - Choose priority level
+5. **Category** - Select or create a category
+6. **Description** - Structure your ticket description
+
+### Structured Description
+
+Interactive mode prompts for a structured description:
+
+- **What**: Concrete outcome in one sentence
+- **Done When**: Acceptance criteria as checkboxes
+- **Context**: Relevant files, patterns, or hints
+- **Not in Scope**: Explicit exclusions
+
+## Examples
+
+### Basic Creation
+
+```bash
+prlt ticket create
+```
+
+### Quick CLI Creation
+
+```bash
+prlt ticket create --title "Fix login bug" --column Backlog
+```
+
+### With Priority and Category
+
+```bash
+prlt ticket create \
+  -t "Add feature" \
+  -c "In Progress" \
+  -p P1 \
+  --category feature
+```
+
+### Link to Epic
+
+```bash
+prlt ticket create \
+  --epic EPIC-001 \
+  -t "Implement auth flow" \
+  --category feature
+```
+
+### With Description File
+
+```bash
+prlt ticket create \
+  --title "My ticket" \
+  --description-file ./ticket-desc.md
+```
+
+### From Stdin
+
+```bash
+echo "Fix the authentication flow" | prlt ticket create \
+  --title "Auth fix" \
+  --description-file -
+```
+
+### Dry Run Validation
+
+```bash
+prlt ticket create \
+  --title "Test ticket" \
+  -P PROJ-001 \
+  --dry-run \
+  --json
+```
+
+## JSON Mode Output
+
+When using `--json`, the command outputs structured data:
+
+```json
+{
+  "success": true,
+  "ticket": {
+    "id": "TKT-042",
+    "title": "Fix login bug",
+    "priority": "P1",
+    "category": "bug",
+    "statusName": "Backlog",
+    "statusCategory": "backlog",
+    "projectId": "mobile-app",
+    "assignee": null,
+    "owner": null,
+    "branch": null,
+    "epicId": null,
+    "position": 0
+  }
+}
+```
+
+### Dry Run Output
+
+```json
+{
+  "dryRun": true,
+  "resource": "ticket",
+  "wouldCreate": {
+    "title": "Fix login bug",
+    "project": "mobile-app",
+    "column": "Backlog",
+    "priority": "P1",
+    "category": "bug"
+  },
+  "metadata": {
+    "command": "ticket create",
+    "flags": { ... }
+  }
+}
+```
+
+## Ticket Structure
+
+Created tickets include:
+
+- **id**: Unique identifier (auto-generated or custom)
+- **title**: Short summary of the work
+- **description**: Detailed requirements and acceptance criteria
+- **priority**: Priority level (workspace-defined)
+- **category**: Classification (bug, feature, etc.)
+- **statusName**: Current column/status
+- **statusCategory**: Semantic state (backlog, started, completed, etc.)
+- **projectId**: Which project the ticket belongs to
+- **epicId**: Optional link to parent epic
+- **labels**: Tags for filtering and organization
+- **subtasks**: Checklist items (from template)
+- **createdAt**: Creation timestamp
+- **updatedAt**: Last modification timestamp
+
+## Templates
+
+Use templates to standardize ticket creation:
+
+```bash
+# List available templates
+prlt ticket template list
+
+# Create from template
+prlt ticket create --template bug-report
+```
+
+Templates can include:
+- Default title pattern
+- Pre-filled description structure
+- Default priority and category
+- Suggested subtasks
+- Default labels
+
+## Related Commands
+
+<CardGroup cols={2}>
+
+<Card title="ticket list" icon="list" href="/commands/ticket/list">
+  List all tickets
+</Card>
+
+<Card title="ticket view" icon="eye" href="/commands/ticket/view">
+  View ticket details
+</Card>
+
+<Card title="ticket edit" icon="pen" href="/commands/ticket/edit">
+  Edit existing ticket
+</Card>
+
+<Card title="epic create" icon="folder-tree" href="/commands/epic/create">
+  Create an epic to group tickets
+</Card>
+
+</CardGroup>

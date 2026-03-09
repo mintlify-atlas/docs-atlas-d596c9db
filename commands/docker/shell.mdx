@@ -1,0 +1,463 @@
+---
+title: prlt docker shell
+description: Open an interactive shell in an agent container
+---
+
+Launch an interactive shell session inside a running Docker container by execution ID, agent name, or container ID.
+
+## Basic Usage
+
+### Shell by Execution ID
+
+Access container for specific execution:
+
+```bash
+prlt docker shell WORK-023
+```
+
+Output:
+
+```
+Shell into WORK-023 (alice → TKT-042)
+Container: abc123def456
+Shell: /bin/sh
+──────────────────────────────────────────────────
+
+node@abc123def456:/workspace$
+```
+
+### Shell by Agent Name
+
+Access agent's container:
+
+```bash
+prlt docker shell alice
+```
+
+Finds alice's running container and opens shell.
+
+### Shell by Container ID
+
+Direct container access:
+
+```bash
+prlt docker shell abc123
+```
+
+Uses Docker container ID (short or long form).
+
+## Flags
+
+<ParamField path="--shell" type="string" default="/bin/sh">
+  Shell to use (/bin/sh, /bin/bash, /bin/zsh, etc.)
+</ParamField>
+
+<ParamField path="-s" type="string">
+  Shorthand for --shell
+</ParamField>
+
+<ParamField path="--user" type="string">
+  User to run as (default: container default user)
+</ParamField>
+
+<ParamField path="-u" type="string">
+  Shorthand for --user
+</ParamField>
+
+<ParamField path="--workdir" type="string">
+  Working directory inside container
+</ParamField>
+
+<ParamField path="-w" type="string">
+  Shorthand for --workdir
+</ParamField>
+
+## Arguments
+
+<ParamField path="target" type="string" required>
+  Execution ID (WORK-XXX), agent name, or container ID
+</ParamField>
+
+## Examples
+
+### Bash Shell
+
+Use bash instead of sh:
+
+```bash
+prlt docker shell WORK-023 --shell /bin/bash
+```
+
+Runs:
+```bash
+docker exec -it abc123def456 /bin/bash
+```
+
+### Specific User
+
+Run as root:
+
+```bash
+prlt docker shell alice --user root
+```
+
+Useful for:
+- Installing packages
+- System configuration
+- Debugging permissions
+
+### Working Directory
+
+Start in specific directory:
+
+```bash
+prlt docker shell WORK-023 --workdir /workspace/src
+```
+
+Shell starts in `/workspace/src`.
+
+### Combined Options
+
+Bash as root in specific directory:
+
+```bash
+prlt docker shell alice \
+  --shell /bin/bash \
+  --user root \
+  --workdir /var/log
+```
+
+## Target Resolution
+
+### By Execution ID
+
+```bash
+prlt docker shell WORK-023
+```
+
+Process:
+1. Look up WORK-023 in database
+2. Get container ID from execution
+3. Verify container running
+4. Open shell
+
+### By Agent Name
+
+```bash
+prlt docker shell alice
+```
+
+Process:
+1. Find alice's running containers
+2. Select most recent if multiple
+3. Open shell
+
+### By Container ID
+
+```bash
+prlt docker shell abc123
+```
+
+Process:
+1. Match container ID (prefix match)
+2. Verify container running
+3. Open shell
+
+## Interactive Session
+
+Once inside:
+
+```bash
+node@abc123:/workspace$ ls
+package.json  src/  tests/
+
+node@abc123:/workspace$ npm test
+✓ All tests passing
+
+node@abc123:/workspace$ git status
+On branch main
+Your branch is up to date
+
+node@abc123:/workspace$ exit
+
+Shell exited with code 0
+```
+
+### Exit Shell
+
+Leave container:
+
+```bash
+exit
+```
+
+or press `Ctrl+D`
+
+Container keeps running.
+
+## Error Handling
+
+### Container Not Running
+
+```bash
+prlt docker shell WORK-023
+```
+
+Output:
+```
+Container alice (WORK-023) is not running. Start it first or use 'docker restart'.
+```
+
+### Target Not Found
+
+```bash
+prlt docker shell bob
+```
+
+Output:
+```
+Could not find container for agent: bob
+```
+
+### Docker Not Running
+
+```bash
+prlt docker shell alice
+```
+
+Output:
+```
+Docker is not running. Start Docker Desktop or the Docker daemon first.
+```
+
+### Not in Workspace
+
+```bash
+prlt docker shell alice
+```
+
+Output:
+```
+Not in a workspace. Run "prlt new" first.
+```
+
+## Use Cases
+
+### Debug Agent Environment
+
+Check container state:
+
+```bash
+prlt docker shell WORK-023
+```
+
+Inspect:
+- Environment variables
+- Installed packages
+- File system state
+- Running processes
+
+### Install Packages
+
+Add missing dependencies:
+
+```bash
+prlt docker shell alice --user root
+```
+
+Then:
+```bash
+apt-get update
+apt-get install -y vim
+```
+
+### Investigate Failures
+
+Debug failed execution:
+
+```bash
+prlt execution list --status failed
+prlt docker shell WORK-020
+```
+
+Check:
+- Error logs
+- File permissions
+- Network connectivity
+
+### Manual Testing
+
+Test changes in container:
+
+```bash
+prlt docker shell alice
+npm test
+npm run build
+```
+
+### File Inspection
+
+View agent's changes:
+
+```bash
+prlt docker shell WORK-023 --workdir /workspace/src
+ls -la
+git diff
+```
+
+## Shell Types
+
+### /bin/sh
+
+Default minimal shell:
+
+```bash
+prlt docker shell alice
+```
+
+Available in all containers.
+
+### /bin/bash
+
+Full-featured bash:
+
+```bash
+prlt docker shell alice --shell /bin/bash
+```
+
+Features:
+- Tab completion
+- Command history
+- Better scripting
+
+### /bin/zsh
+
+Zsh with plugins:
+
+```bash
+prlt docker shell alice --shell /bin/zsh
+```
+
+If installed in container.
+
+## Comparison with Tmux
+
+### Shell (docker shell)
+
+**New session**:
+- Fresh shell process
+- Clean environment
+- Doesn't affect agent
+
+**Use for**:
+- Inspection
+- Debugging
+- Manual commands
+
+### Tmux (tmux attach)
+
+**Join agent session**:
+- See agent's terminal
+- Share screen with agent
+- Can interfere with work
+
+**Use for**:
+- Watching agent
+- Taking over session
+- Interactive collaboration
+
+**Access tmux:**
+
+```bash
+tmux attach -t prlt-alice-work-023
+```
+
+## Working Directory
+
+### Default Directory
+
+Container's WORKDIR:
+
+```bash
+prlt docker shell alice
+# Usually /workspace
+```
+
+### Override Directory
+
+Start elsewhere:
+
+```bash
+prlt docker shell alice --workdir /tmp
+prlt docker shell alice --workdir /var/log
+prlt docker shell alice --workdir /root
+```
+
+## User Permissions
+
+### Default User
+
+Container's default user:
+
+```bash
+prlt docker shell alice
+# Usually 'node' or 'vscode'
+```
+
+### Root User
+
+Full permissions:
+
+```bash
+prlt docker shell alice --user root
+```
+
+Can:
+- Install packages
+- Modify system files
+- Change permissions
+
+### Specific User
+
+Run as any user:
+
+```bash
+prlt docker shell alice --user node
+prlt docker shell alice --user vscode
+```
+
+## Tips
+
+<Tip>
+Use `--shell /bin/bash` for better command history and tab completion.
+</Tip>
+
+<Tip>
+Start with `--user root` when you need to install packages or modify system configuration.
+</Tip>
+
+<Tip>
+Use `--workdir` to jump directly to the directory you need instead of cd-ing after entering.
+</Tip>
+
+<Warning>
+Changes made in the shell persist in the container but are lost when container is removed. Rebuild devcontainer to make permanent changes.
+</Warning>
+
+<Warning>
+This tool requires an interactive terminal (TTY). It won't work in scripts or with --json mode.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="View Logs" icon="file-lines" href="/commands/docker/logs">
+View container logs instead of interactive shell
+</Card>
+
+<Card title="List Containers" icon="list" href="/commands/docker/list">
+View all agent containers
+</Card>
+
+</CardGroup>

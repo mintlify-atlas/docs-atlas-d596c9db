@@ -1,122 +1,156 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Proletariat",
+  "theme": "aspen",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#040404",
+    "light": "#040404",
+    "dark": "#040404"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://media.brand.dev/bc4d3c8a-a7e5-4490-84fb-520ed5257f29.png",
+  "logo": {
+    "light": "https://media.brand.dev/84315885-b1ac-4b52-9557-f71fc77e9c75.svg",
+    "dark": "https://media.brand.dev/84315885-b1ac-4b52-9557-f71fc77e9c75.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/chrismcdermut/proletariat"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/chrismcdermut/proletariat"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "installation",
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/overview",
+              "concepts/workspace",
+              "concepts/tickets",
+              "concepts/agents",
+              "concepts/execution-modes",
+              "concepts/workflows"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Guides",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "guides/getting-started",
+              "guides/creating-tickets",
+              "guides/spawning-agents",
+              "guides/parallel-agents",
+              "guides/using-themes",
+              "guides/json-mode"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "MCP Server",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "mcp/overview",
+              "mcp/setup",
+              "mcp/tools"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/docker-execution",
+              "advanced/templates",
+              "advanced/integrations",
+              "advanced/troubleshooting"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Command Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "commands/overview"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Workspace",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "commands/workspace/init",
+              "commands/workspace/new",
+              "commands/workspace/list",
+              "commands/workspace/use"
+            ]
+          },
+          {
+            "group": "Tickets",
+            "pages": [
+              "commands/ticket/create",
+              "commands/ticket/list",
+              "commands/ticket/view",
+              "commands/ticket/edit",
+              "commands/ticket/move",
+              "commands/ticket/delete"
+            ]
+          },
+          {
+            "group": "Work",
+            "pages": [
+              "commands/work/start",
+              "commands/work/spawn",
+              "commands/work/complete",
+              "commands/work/ready"
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "commands/agent/list",
+              "commands/agent/shell",
+              "commands/agent/staff",
+              "commands/agent/themes"
+            ]
+          },
+          {
+            "group": "Board & Projects",
+            "pages": [
+              "commands/board/view",
+              "commands/project/create",
+              "commands/project/list",
+              "commands/epic/create"
+            ]
+          },
+          {
+            "group": "Execution",
+            "pages": [
+              "commands/execution/list",
+              "commands/execution/logs",
+              "commands/execution/stop"
+            ]
+          },
+          {
+            "group": "Docker",
+            "pages": [
+              "commands/docker/list",
+              "commands/docker/shell",
+              "commands/docker/logs"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

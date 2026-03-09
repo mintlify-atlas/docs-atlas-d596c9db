@@ -1,0 +1,522 @@
+---
+title: Spawning Agents
+description: Launch agents to work on tickets using different execution modes and options
+---
+
+Spawning agents is how you delegate work in Proletariat. This guide covers different ways to spawn agents and configure their execution.
+
+## Basic Spawning
+
+### Single Ticket
+
+Start work on one ticket:
+
+```bash
+prlt work start TKT-042
+```
+
+This will:
+1. Prompt you to select an action (implement, groom, review)
+2. Choose execution environment (Docker or host)
+3. Create a git branch
+4. Launch the agent in a tmux session
+
+### Interactive Mode
+
+Let the CLI guide you:
+
+```bash
+prlt work spawn
+```
+
+You'll choose:
+- **Mode**: All, Many, or Count
+- **Tickets**: Which tickets to spawn
+- **Action**: What the agent should do
+- **Environment**: Docker or host
+- **Display**: Terminal or background
+
+## Execution Modes
+
+### Environment
+
+Where the agent runs:
+
+<Tabs>
+  <Tab title="Docker (Recommended)">
+    **Sandboxed execution in container**
+
+    ```bash
+    prlt work start TKT-042
+    ```
+
+    **Pros:**
+    - Fully isolated from host
+    - Safe for `--skip-permissions` mode
+    - Consistent environment
+    - No pollution of host filesystem
+
+    **Cons:**
+    - Requires Docker installed and running
+    - Slightly slower startup
+    - Uses disk space for containers
+
+    **Requirements:**
+    - Docker running
+    - `.devcontainer/devcontainer.json` in repo
+    - `devcontainer` CLI installed (optional, for better features)
+  </Tab>
+
+  <Tab title="Host">
+    **Direct execution on your machine**
+
+    ```bash
+    prlt work start TKT-042 --run-on-host
+    ```
+
+    **Pros:**
+    - Faster startup (no container overhead)
+    - No Docker required
+    - Direct access to host tools
+
+    **Cons:**
+    - Agent has full host access
+    - Can modify files outside workspace
+    - Use `safe` permission mode
+
+    **Requirements:**
+    - Claude Code installed
+    - Git available
+    - Dependencies installed on host
+  </Tab>
+</Tabs>
+
+### Display Mode
+
+How you interact with the agent:
+
+<Tabs>
+  <Tab title="Terminal">
+    **New terminal tab**
+
+    ```bash
+    prlt work start TKT-042 --display terminal
+    ```
+
+    Opens a new terminal tab with the agent session. Best for:
+    - Watching agent work in real-time
+    - Interactive debugging
+    - Learning how agents work
+
+    <Note>
+    Terminal is brought to **background** by default. Use `--focus` to bring it to foreground immediately.
+    </Note>
+  </Tab>
+
+  <Tab title="Background">
+    **Detached session**
+
+    ```bash
+    prlt work start TKT-042 --display background
+    ```
+
+    Agent runs in background tmux session. Best for:
+    - Spawning multiple agents
+    - Long-running tasks
+    - Hands-off workflows
+
+    **Attach later:**
+    ```bash
+    prlt execution list
+    prlt execution logs <execution-id>
+    ```
+  </Tab>
+
+  <Tab title="Foreground">
+    **Current terminal**
+
+    ```bash
+    prlt work start TKT-042 --display foreground
+    ```
+
+    Agent takes over current terminal. Best for:
+    - Quick one-off tasks
+    - CI/CD scripts
+    - Debugging specific issues
+  </Tab>
+</Tabs>
+
+### Permission Mode
+
+Agent access level:
+
+<Tabs>
+  <Tab title="Safe (Default)">
+    **Agent prompts for permissions**
+
+    ```bash
+    prlt work start TKT-042
+    ```
+
+    Agent asks before:
+    - Executing shell commands
+    - Modifying files outside workspace
+    - Making network requests
+
+    Recommended for:
+    - Host execution
+    - Unfamiliar codebases
+    - Learning and debugging
+  </Tab>
+
+  <Tab title="Danger (YOLO)">
+    **No prompts, full autonomy**
+
+    ```bash
+    prlt work start TKT-042 --skip-permissions
+    ```
+
+    Agent has full access without prompts. Best combined with Docker:
+
+    ```bash
+    prlt work start TKT-042 --skip-permissions  # Safe in Docker
+    ```
+
+    Recommended for:
+    - Docker execution (sandboxed)
+    - Batch spawning
+    - Trusted codebases
+    - Full automation
+
+    <Warning>
+    Use caution with `--skip-permissions` on host. Agent has unrestricted access.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Actions
+
+What the agent should do with the ticket:
+
+### Built-in Actions
+
+<Tabs>
+  <Tab title="Implement">
+    **Write code to complete the ticket**
+
+    ```bash
+    prlt work start TKT-042 --action implement
+    ```
+
+    Agent will:
+    - Read ticket requirements
+    - Write/modify code
+    - Add tests
+    - Create PR when done
+
+    Best for: Feature work, bug fixes, refactoring
+  </Tab>
+
+  <Tab title="Groom">
+    **Refine ticket requirements**
+
+    ```bash
+    prlt work start TKT-042 --action groom
+    ```
+
+    Agent will:
+    - Add acceptance criteria
+    - Break down into subtasks
+    - Add technical context
+    - Suggest implementation approach
+
+    Best for: Vague tickets, planning, breaking down epics
+  </Tab>
+
+  <Tab title="Review">
+    **Review code changes**
+
+    ```bash
+    prlt work start TKT-042 --action review
+    ```
+
+    Agent will:
+    - Review PR changes
+    - Check for bugs
+    - Suggest improvements
+    - Verify acceptance criteria
+
+    Best for: PR review, code quality, catching issues early
+  </Tab>
+</Tabs>
+
+### Custom Prompts
+
+Provide specific instructions:
+
+```bash
+prlt work start TKT-042 --action custom --message "Add unit tests for the API"
+```
+
+Or use the `--prompt` flag for full control:
+
+```bash
+prlt work start TKT-042 --prompt "Focus on security: validate all inputs and add rate limiting"
+```
+
+### List Available Actions
+
+```bash
+prlt action list
+```
+
+## Advanced Options
+
+### Session Manager
+
+How agent runs inside container:
+
+```bash
+# Tmux session (default, persistent)
+prlt work start TKT-042 --session tmux
+
+# Direct execution (no session wrapper)
+prlt work start TKT-042 --session direct
+```
+
+### Workspace Isolation
+
+How agent workspace is created:
+
+<Tabs>
+  <Tab title="Worktree (Default)">
+    **Git worktree, synced with main**
+
+    ```bash
+    prlt work start TKT-042
+    ```
+
+    - Changes sync to main repo in real-time
+    - Shares `.git` directory
+    - Faster setup
+  </Tab>
+
+  <Tab title="Clone">
+    **Independent git clone**
+
+    ```bash
+    prlt work start TKT-042 --clone
+    ```
+
+    - Fully isolated repository
+    - No sync with main
+    - More disk space
+    - Better isolation
+  </Tab>
+</Tabs>
+
+### PR Creation
+
+Control whether agent creates PRs:
+
+```bash
+# Create PR when work is ready (explicit)
+prlt work start TKT-042 --create-pr
+
+# Skip PR creation (default)
+prlt work start TKT-042
+```
+
+<Note>
+PR behavior defaults to workspace config. Use `--create-pr` to override.
+</Note>
+
+### Force Start
+
+Start work even if already in progress:
+
+```bash
+prlt work start TKT-042 --force
+```
+
+Useful for:
+- Parallel work on same ticket (e.g., groom + implement)
+- Respawning after agent failure
+- Multiple approaches to same problem
+
+## Ephemeral vs Staff Agents
+
+### Ephemeral Agents (Default)
+
+**Created on-demand, auto-named**
+
+```bash
+prlt work start TKT-042 --ephemeral
+```
+
+Or just:
+
+```bash
+prlt work start TKT-042
+```
+
+**Characteristics:**
+- Auto-generated name (e.g., `bold-bezos-1`)
+- Temporary workspace
+- Cleaned up after work completes
+- Best for: Most workflows, batch spawning
+
+### Staff Agents
+
+**Persistent, named agents**
+
+```bash
+# Create staff agents
+prlt agent staff add alice bob charlie
+
+# Use specific agent
+prlt work start TKT-042 --agent alice
+```
+
+**Characteristics:**
+- Named workspace persists
+- Can work on multiple tickets over time
+- Workspace survives between sessions
+- Best for: Long-term projects, specialized agents
+
+## Common Patterns
+
+### Watch Mode
+
+Stream agent output in real-time:
+
+```bash
+prlt work start TKT-042 --watch
+```
+
+### Background Batch
+
+Spawn multiple tickets in background:
+
+```bash
+prlt work spawn TKT-001 TKT-002 TKT-003 --display background
+```
+
+### Docker + YOLO
+
+Full automation, safely sandboxed:
+
+```bash
+prlt work start TKT-042 --skip-permissions
+```
+
+<Note>
+Docker is used by default if `.devcontainer` exists. Use `--run-on-host` to override.
+</Note>
+
+### Host + Safe
+
+Local development with safety prompts:
+
+```bash
+prlt work start TKT-042 --run-on-host
+```
+
+## Monitoring Agents
+
+### List Running Executions
+
+```bash
+prlt execution list
+```
+
+Shows:
+- Execution ID
+- Ticket ID
+- Agent name
+- Status
+- Started time
+
+### View Logs
+
+```bash
+prlt execution logs <execution-id>
+```
+
+### Attach to Session
+
+```bash
+prlt agent shell <agent-name>
+```
+
+### Stop Execution
+
+```bash
+prlt execution stop <execution-id>
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+
+<Accordion title="Docker not available">
+  Check if Docker is running:
+  ```bash
+  docker ps
+  ```
+
+  Or run on host:
+  ```bash
+  prlt work start TKT-042 --run-on-host
+  ```
+</Accordion>
+
+<Accordion title="Agent fails immediately">
+  Check execution logs:
+  ```bash
+  prlt execution logs <execution-id>
+  ```
+
+  Common issues:
+  - Missing dependencies
+  - Invalid devcontainer config
+  - Git branch conflicts
+</Accordion>
+
+<Accordion title="Terminal not opening">
+  Set terminal preference:
+  ```bash
+  prlt work start TKT-042 --reconfigure
+  ```
+
+  Or specify executor:
+  ```bash
+  prlt work start TKT-042 --executor claude-code
+  ```
+</Accordion>
+
+<Accordion title="Permission denied errors">
+  For Docker:
+  - Check Docker permissions
+  - Verify `devcontainer` CLI is installed
+
+  For host:
+  - Check file permissions in workspace
+  - Verify Git config is correct
+</Accordion>
+
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Parallel Agents" icon="layer-group" href="/guides/parallel-agents">
+Spawn multiple agents simultaneously
+</Card>
+
+<Card title="Execution Modes" icon="docker" href="/concepts/execution-modes">
+Deep dive into Docker vs host execution
+</Card>
+
+</CardGroup>

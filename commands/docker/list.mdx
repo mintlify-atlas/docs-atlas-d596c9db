@@ -1,0 +1,402 @@
+---
+title: prlt docker list
+description: List Docker containers used by agent executions
+---
+
+Display Docker containers from agent work executions with their status and metadata.
+
+## Basic Usage
+
+### List Devcontainers
+
+Show containers created by agents:
+
+```bash
+prlt docker list
+```
+
+Output:
+
+```
+Docker Containers
+════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Active Executions:
+ID              Agent           Ticket       Status       Container
+────────────────────────────────────────────────────────────────────────────────────────────────────────
+WORK-023        alice           TKT-042      running      abc123def456 (up)
+WORK-021        charlie         TKT-040      running      def456abc123 (up)
+
+Docker Containers (devcontainers):
+Container ID    Agent           Status          Uptime
+──────────────────────────────────────────────────────────────────────────
+abc123def456    alice           Up              2 hours
+def456abc123    charlie         Up              45 minutes
+ghi789jkl012    bob             Up              3 days
+
+Commands:
+  prlt docker status    Check Docker daemon status
+  prlt docker clean     Remove orphaned containers
+```
+
+## Flags
+
+<ParamField path="--all" type="boolean" default="false">
+  Show all containers (including non-devcontainer)
+</ParamField>
+
+<ParamField path="-a" type="boolean">
+  Shorthand for --all
+</ParamField>
+
+<ParamField path="--running" type="boolean" default="false">
+  Only show running containers
+</ParamField>
+
+<ParamField path="-r" type="boolean">
+  Shorthand for --running
+</ParamField>
+
+<ParamField path="--json" type="boolean" default="false">
+  Output structured JSON for AI agents
+</ParamField>
+
+## Examples
+
+### All Containers
+
+Show all Docker containers:
+
+```bash
+prlt docker list --all
+```
+
+Includes:
+- Devcontainers from agents
+- Other Docker containers on system
+- Stopped containers
+
+### Running Only
+
+Show only running containers:
+
+```bash
+prlt docker list --running
+```
+
+Filters out stopped containers.
+
+### JSON Output
+
+For scripts and monitoring:
+
+```bash
+prlt docker list --json
+```
+
+Output:
+
+```json
+{
+  "executions": [
+    {
+      "id": "WORK-023",
+      "agentName": "alice",
+      "ticketId": "TKT-042",
+      "status": "running",
+      "containerId": "abc123def456",
+      "environment": "devcontainer"
+    }
+  ],
+  "containers": [
+    {
+      "id": "abc123def456",
+      "name": "vsc-alice-abc123",
+      "image": "vsc-alice-abc123def456",
+      "status": "Up 2 hours",
+      "agentDir": "/workspace/agents/alice",
+      "uptime": "2 hours"
+    }
+  ]
+}
+```
+
+## Container Information
+
+### Active Executions Section
+
+Shows running work with container links:
+
+**ID**: Execution identifier (WORK-023)
+
+**Agent**: Agent name (alice)
+
+**Ticket**: Linked ticket (TKT-042)
+
+**Status**: Execution status (running, starting)
+
+**Container**: Container ID with status:
+- `abc123def456 (up)` - Container running
+- `abc123def456 (down)` - Container stopped
+- `none` - No container assigned
+
+### Docker Containers Section
+
+Shows all devcontainers:
+
+**Container ID**: Short Docker ID (12 chars)
+
+**Agent**: Agent name from database or image
+
+**Status**: Docker container status:
+- `Up` - Running
+- `Exited` - Stopped
+
+**Uptime**: How long container has been running:
+- `2 hours`
+- `45 minutes`
+- `3 days`
+
+## Docker Status Check
+
+### Docker Not Running
+
+```bash
+prlt docker list
+```
+
+Output:
+
+```
+Docker is not running
+Start Docker Desktop or the Docker daemon first.
+```
+
+### No Containers
+
+```bash
+prlt docker list
+```
+
+Output:
+
+```
+Docker Containers
+════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+No devcontainer Docker containers found.
+
+Commands:
+  prlt docker status    Check Docker daemon status
+  prlt docker clean     Remove orphaned containers
+```
+
+## Agent Name Resolution
+
+Agent names come from:
+
+1. **Database** (containers table): Source of truth
+2. **Image name** (fallback): Extracted from `vsc-{agent}-` prefix
+3. **Container name** (last resort): If no other source
+
+**Priority:**
+```
+Database > Image > Container Name
+```
+
+## Devcontainer Detection
+
+Containers identified as devcontainers by:
+
+**Label**: `devcontainer.local_folder` set
+
+**Example:**
+```bash
+docker inspect abc123 | grep devcontainer.local_folder
+```
+
+Without `--all`, only devcontainers show.
+
+## Container Lifecycle
+
+### Created by Spawn
+
+```bash
+prlt spawn alice TKT-042 --env devcontainer
+```
+
+Creates container:
+- Image: Built from agent's `.devcontainer/`
+- Name: `vsc-alice-{hash}`
+- Status: Running
+
+### Execution Stops
+
+```bash
+prlt execution stop WORK-023
+```
+
+Container behavior:
+- Tmux session killed
+- Container keeps running
+- Available for reuse
+
+### Container Reuse
+
+Next spawn can reuse:
+
+```bash
+prlt spawn alice TKT-043 --env devcontainer
+```
+
+Uses existing container if available.
+
+### Manual Cleanup
+
+```bash
+prlt docker clean
+```
+
+Removes orphaned containers:
+- No active executions
+- Container stopped
+
+## Use Cases
+
+### Monitor Container Usage
+
+See which agents have containers:
+
+```bash
+prlt docker list
+```
+
+Shows:
+- Active work containers
+- Idle containers
+- Container uptime
+
+### Debug Container Issues
+
+Find containers for specific execution:
+
+```bash
+prlt docker list
+# Note container ID for WORK-023
+prlt docker shell abc123
+```
+
+### Resource Audit
+
+Check container resource usage:
+
+```bash
+prlt docker list --all
+docker stats $(prlt docker list --json | jq -r '.containers[].id')
+```
+
+### Clean Up Old Containers
+
+Identify containers to remove:
+
+```bash
+prlt docker list
+# Find containers with no active executions
+prlt docker clean
+```
+
+### Verify Docker Setup
+
+Check Docker is working:
+
+```bash
+prlt docker list
+```
+
+If successful, Docker daemon is running and accessible.
+
+## Filtering
+
+### By Status
+
+Running only:
+```bash
+prlt docker list --running
+```
+
+All states:
+```bash
+prlt docker list
+```
+
+### By Type
+
+Devcontainers only (default):
+```bash
+prlt docker list
+```
+
+All containers:
+```bash
+prlt docker list --all
+```
+
+### By Agent (via jq)
+
+Containers for alice:
+```bash
+prlt docker list --json | jq '.containers[] | select(.agentName == "alice")'
+```
+
+## Performance
+
+### Query Docker
+
+Uses `docker ps -a` with label filtering:
+
+```bash
+docker ps -a --format "{{.ID}}|{{.Names}}|{{.Image}}|{{.Status}}|{{.Label \"devcontainer.local_folder\"}}"
+```
+
+Efficient single query.
+
+### Database Lookup
+
+Queries workspace database for:
+- Active executions
+- Container metadata
+- Agent names
+
+Cached in memory during command.
+
+## Tips
+
+<Tip>
+Run regularly to ensure containers aren't accumulating. Old containers consume disk space.
+</Tip>
+
+<Tip>
+Use `--running` to focus on active containers and skip stopped ones.
+</Tip>
+
+<Tip>
+JSON output integrates with docker stats and monitoring tools for resource tracking.
+</Tip>
+
+<Warning>
+Stopped containers still consume disk space. Use `prlt docker clean` to remove them.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Shell Access" icon="terminal" href="/commands/docker/shell">
+Open a shell in a container
+</Card>
+
+<Card title="View Logs" icon="file-lines" href="/commands/docker/logs">
+View container logs
+</Card>
+
+</CardGroup>

@@ -1,0 +1,174 @@
+---
+title: prlt agent list
+description: List all agents and their current status
+---
+
+View all agents in your workspace, their status, repository state, and ticket assignments.
+
+## Usage
+
+```bash
+prlt agent list [--type <type>]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--type`, `-t` | Filter by agent type: `staff`, `temp`, or `all` |
+| `--machine` | Output in JSON format for programmatic use |
+
+## Examples
+
+### List all agents
+
+```bash
+prlt agent list
+```
+
+Prompts for agent type selection, then displays:
+
+```
+ Staff Agents:
+
+🟢 altman [staff] - Active
+   Branch: feature/auth
+   Repositories: 1 repo(s), commits ahead: api(+3)
+   Current tickets: PRLT-123
+   Completed: 5 ticket(s)
+
+🟢 bezos [staff] - Active
+   Branch: fix/database
+   Repositories: 2 repo(s), 1 dirty
+   No active tickets
+
+ Temporary Agents:
+
+🟡 bold-camry [temp] - Active (running)
+   Branch: temp/bold-camry-work
+   Current tickets: PRLT-456
+
+Summary:
+   Staff agents: 2 (2 active)
+   Temp agents: 1 (1 active, 1 running)
+   Tickets assigned: 2
+```
+
+### List only staff agents
+
+```bash
+prlt agent list --type staff
+```
+
+Shows only persistent (staff) agents with detailed status.
+
+### List only temp agents
+
+```bash
+prlt agent list --type temp
+```
+
+Shows only ephemeral (temporary) agents created by `prlt work spawn`.
+
+### JSON output
+
+```bash
+prlt agent list --type all --machine
+```
+
+Outputs structured data:
+
+```json
+{
+  "staff": [
+    {
+      "name": "altman",
+      "type": "staff",
+      "exists": true,
+      "branch": "feature/auth",
+      "repositories": [
+        {
+          "name": "api",
+          "status": "clean",
+          "commitsAhead": 3
+        }
+      ],
+      "assignedTickets": ["PRLT-123"],
+      "completedTickets": ["PRLT-100", "PRLT-101"],
+      "running": false
+    }
+  ],
+  "temp": [
+    {
+      "name": "bold-camry",
+      "type": "temp",
+      "exists": true,
+      "branch": "temp/bold-camry-work",
+      "repositories": [],
+      "assignedTickets": ["PRLT-456"],
+      "completedTickets": [],
+      "running": true
+    }
+  ]
+}
+```
+
+## Status Indicators
+
+### Staff Agents
+
+- 🟢 **Active** - Agent directory and worktrees exist
+- 🔴 **Missing** - Agent directory not found or worktrees broken
+
+### Temporary Agents
+
+- 🟡 **Running** - Agent has active tmux session (work in progress)
+- 🟢 **Active** - Agent directory exists but no work running
+- 🔴 **Missing** - Agent directory not found
+
+## Agent Information
+
+For each agent, the command displays:
+
+- **Name and Type** - Agent identifier and whether it's staff or temp
+- **Status** - Whether the agent workspace exists and is valid
+- **Branch** - Current git branch in the agent workspace
+- **Repositories** - Number of repos, dirty status, and commits ahead
+- **Current Tickets** - Tickets currently assigned (if PMO enabled)
+- **Completed Tickets** - Number of finished tickets (staff only)
+
+## Agent Types
+
+### Staff Agents (Persistent)
+
+Created with `prlt agent staff add` or `prlt staff add`:
+
+- Permanent workspaces in `staff/` directory
+- Named from themes (billionaires, toyotas, companies)
+- Persist across sessions
+- Track ticket history
+
+### Temp Agents (Ephemeral)
+
+Created automatically by `prlt work spawn`:
+
+- Temporary workspaces in `temp/` directory
+- Auto-generated names like `bold-camry`, `keen-bezos`
+- Cleaned up after work completes
+- Single-purpose execution
+
+## Summary Section
+
+The command displays a summary with:
+
+- Total agent count by type
+- Active vs inactive agents
+- Running agents (temp only)
+- Total tickets assigned (if PMO enabled)
+- Historical cleaned agents (when showing all)
+
+## Related Commands
+
+- [`prlt agent staff add`](/commands/agent/staff#add) - Create new staff agents
+- [`prlt agent shell`](/commands/agent/shell) - Open interactive shell in agent workspace
+- [`prlt work list`](/commands/work/list) - View work assignments and progress

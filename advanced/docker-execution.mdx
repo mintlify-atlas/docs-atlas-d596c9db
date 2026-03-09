@@ -1,0 +1,432 @@
+---
+title: 'Docker Execution Mode'
+description: 'Run agents in isolated Docker containers with devcontainer support'
+---
+
+Proletariat supports running agents in isolated Docker containers using devcontainers. This provides secure sandboxing while maintaining full development environment capabilities.
+
+## Overview
+
+Docker execution mode runs agents in isolated containers with:
+
+- **Security isolation** - Sandboxed from your host system
+- **Network firewall** - Controlled API access via iptables
+- **Volume mounts** - Access to repos and PMO data
+- **Resource limits** - CPU and memory constraints
+- **Persistent credentials** - Shared Claude OAuth tokens
+
+## When to Use Docker Mode
+
+**Use Docker when:**
+- You want maximum security isolation
+- Testing untrusted code or experimental agents
+- Running parallel agents without conflicts
+- You have Docker Desktop installed and running
+
+**Use Host mode when:**
+- You need maximum performance
+- Docker isn't available
+- Debugging local development issues
+- Running quick ad-hoc sessions
+
+## Devcontainer Support
+
+### Automatic Detection
+
+Proletariat automatically detects `.devcontainer/` configuration in agent directories:
+
+```bash
+# If devcontainer exists, prompts for environment choice
+prlt work start TKT-001
+
+# Force Docker mode
+prlt work start TKT-001 --display terminal
+
+# Force host mode (bypass devcontainer)
+prlt work start TKT-001 --run-on-host
+```
+
+### Devcontainer Structure
+
+Each agent gets a `.devcontainer/` directory with:
+
+```
+agents/staff/alice/
+├── .devcontainer/
+│   ├── devcontainer.json    # Container configuration
+│   └── Dockerfile           # Custom image with firewall
+├── repo1/                   # Git worktree for repo1
+└── repo2/                   # Git worktree for repo2
+```
+
+### Configuration Options
+
+The generated `devcontainer.json` includes:
+
+```json
+{
+  "name": "Agent: alice",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "TZ": "America/Los_Angeles",
+      "PRLT_REGISTRY": "npm",
+      "PRLT_VERSION": "latest"
+    }
+  },
+  "runArgs": [
+    "--memory=4g",
+    "--cpus=2"
+  ],
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind",
+    "source=claude-credentials,target=/home/node/.claude,type=volume"
+  ],
+  "capAdd": ["NET_ADMIN", "NET_RAW"],
+  "remoteUser": "node"
+}
+```
+
+## Resource Limits
+
+### Memory Allocation
+
+Default: **4GB per container**
+
+```bash
+# Increase memory for resource-intensive tasks
+prlt work start TKT-001 --memory 8g
+```
+
+Edit `.devcontainer/devcontainer.json` to change defaults:
+
+```json
+"runArgs": [
+  "--memory=8g"
+]
+```
+
+### CPU Allocation
+
+Default: **2 CPUs per container**
+
+```bash
+# Allocate more CPUs
+prlt work start TKT-001 --cpus 4
+```
+
+### Monitoring Resources
+
+```bash
+# Check container resource usage
+docker stats
+
+# View all agent containers
+prlt docker list
+
+# View specific container details
+docker inspect <container-id>
+```
+
+## Volume Mounts
+
+### Workspace Mount
+
+The agent directory is mounted at `/workspace`:
+
+```bash
+# Host path:
+/path/to/hq/agents/staff/alice/
+
+# Container path:
+/workspace/
+```
+
+### HQ and PMO Mounts
+
+The HQ `.proletariat/` directory and PMO are mounted for ticket access:
+
+```bash
+# HQ database
+/hq/.proletariat/workspace.db
+
+# PMO directory
+/hq/pmo/
+```
+
+### Repository Mounts
+
+**Worktree mode** (default): Parent repos are mounted to enable git worktree references:
+
+```bash
+# Host:
+/path/to/hq/repos/myrepo/
+
+# Container:
+/hq/repos/myrepo/
+```
+
+**Clone mode**: Each agent gets independent git clone (no parent mount needed):
+
+```bash
+prlt work start TKT-001 --clone
+```
+
+<Warning>
+Worktree mounts are **not readonly** - git operations write to parent `.git/objects/` and `.git/worktrees/`
+</Warning>
+
+### Shared Volumes
+
+**Claude credentials volume**: Shared OAuth tokens across all containers
+
+```bash
+# Check if credentials exist
+docker volume inspect claude-credentials
+
+# View credential info
+prlt agent login --check
+```
+
+**Bash history volume**: Persistent command history per agent
+
+```bash
+source=claude-bash-history,target=/commandhistory,type=volume
+```
+
+## Container Management
+
+### Listing Containers
+
+```bash
+# All devcontainer containers
+prlt docker list
+
+# Only running containers
+prlt docker list --running
+
+# Include non-devcontainer containers
+prlt docker list --all
+```
+
+### Container Lifecycle
+
+```bash
+# Start stopped container
+prlt docker start alice
+
+# Stop running container
+prlt docker stop alice
+
+# Restart container
+prlt docker restart alice
+
+# View container logs
+prlt docker logs alice
+```
+
+### Shell Access
+
+```bash
+# Shell into running container
+prlt docker shell alice
+
+# Or use agent command
+prlt agent shell alice
+
+# Run command in container
+docker exec -it <container-id> bash
+```
+
+### Cleanup
+
+```bash
+# Remove stopped containers
+prlt docker clean
+
+# Remove unused resources (images, volumes, networks)
+prlt docker prune
+
+# Force remove all agent containers
+docker ps -a | grep "vsc-" | awk '{print $1}' | xargs docker rm -f
+```
+
+## Permissions and Security
+
+### Permission Modes
+
+Containers can run in two permission modes:
+
+```bash
+# Safe mode (default) - Agent prompts for dangerous operations
+prlt work start TKT-001
+
+# Danger mode (YOLO) - Skip permission checks
+prlt work start TKT-001 --skip-permissions
+```
+
+<Warning>
+Danger mode grants full autonomy. Only use with Docker isolation for safety.
+</Warning>
+
+### Network Firewall
+
+Containers use iptables firewall to control API access:
+
+**Allowed domains:**
+- `api.anthropic.com` - Claude API
+- `api.github.com` - GitHub API
+- `*.githubusercontent.com` - GitHub content
+- `registry.npmjs.org` - npm packages
+
+**Blocked:**
+- All other external network access
+- Local network access (except container networking)
+
+Firewall is initialized via `postStartCommand`:
+
+```dockerfile
+postStartCommand: sudo /usr/local/bin/init-firewall.sh
+```
+
+### Capabilities
+
+Containers require `NET_ADMIN` and `NET_RAW` for firewall setup:
+
+```json
+"capAdd": ["NET_ADMIN", "NET_RAW"]
+```
+
+## Authentication in Containers
+
+### Claude OAuth
+
+Containers share host Claude credentials via volume mount:
+
+```bash
+# Login on host (once)
+claude login
+
+# Credentials automatically available in containers
+prlt work start TKT-001
+```
+
+<Warning>
+Containers prefer OAuth over API key. If both are present, OAuth is used to preserve your Max subscription.
+</Warning>
+
+### GitHub Authentication
+
+```bash
+# Login via gh CLI
+gh auth login
+
+# Export token for containers
+export GH_TOKEN=$(gh auth token)
+export GITHUB_TOKEN=$(gh auth token)
+
+# Or use prlt helper
+prlt gh login
+prlt gh token
+```
+
+Tokens are passed as environment variables in `devcontainer.json`:
+
+```json
+"containerEnv": {
+  "GH_TOKEN": "${localEnv:GH_TOKEN}",
+  "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
+}
+```
+
+## Mount Modes
+
+### Worktree Mode (Default)
+
+Agents use git worktrees sharing the parent repository:
+
+**Pros:**
+- Fast branch creation
+- Shared object store (saves disk space)
+- Real-time sync with parent repo
+
+**Cons:**
+- Requires parent repo mounts in container
+- Git wrapper needed for path translation
+
+```bash
+prlt work start TKT-001
+```
+
+### Clone Mode
+
+Agents get independent git clones:
+
+**Pros:**
+- Complete isolation
+- No parent repo mount needed
+- Simpler git operations
+
+**Cons:**
+- Slower initial clone
+- More disk space
+- No real-time sync
+
+```bash
+prlt work start TKT-001 --clone
+```
+
+## Environment Variables
+
+Containers receive these environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `DEVCONTAINER` | Always "true" in containers |
+| `PRLT_HQ_PATH` | Path to HQ directory (/hq) |
+| `PRLT_AGENT_NAME` | Agent name (e.g., "alice") |
+| `PRLT_HOST_PATH` | Host path to agent directory |
+| `PRLT_MOUNT_MODE` | "worktree" or "clone" |
+| `PRLT_GIT_USER_NAME` | Git user.name from host |
+| `PRLT_GIT_USER_EMAIL` | Git user.email from host |
+| `GH_TOKEN` | GitHub token for API access |
+
+## Troubleshooting
+
+See [Troubleshooting](/advanced/troubleshooting#docker-issues) for Docker-specific issues.
+
+### Container Won't Start
+
+```bash
+# Check Docker daemon
+docker info
+
+# Check container logs
+prlt execution logs <execution-id>
+docker logs <container-id>
+
+# Rebuild container
+prlt agent rebuild alice
+```
+
+### Permission Denied
+
+```bash
+# Add user to docker group (Linux)
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+### Out of Disk Space
+
+```bash
+# Clean Docker resources
+prlt docker prune
+docker system prune -a
+```
+
+## Related
+
+- [Troubleshooting](/advanced/troubleshooting) - Common Docker issues
+- [Work Commands](/core/work) - Starting work with Docker
+- [Agent Management](/core/agents) - Managing containerized agents

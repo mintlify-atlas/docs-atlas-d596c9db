@@ -1,0 +1,428 @@
+---
+title: 'prlt ticket edit'
+description: 'Edit an existing ticket'
+icon: 'pen'
+---
+
+Modify ticket properties, description, subtasks, labels, and acceptance criteria.
+
+## Usage
+
+<CodeGroup>
+
+```bash Interactive Mode
+prlt ticket edit TKT-001
+```
+
+```bash Update Title
+prlt ticket edit TKT-001 --title "New title"
+```
+
+```bash Update Multiple Fields
+prlt ticket edit TKT-001 \
+  --priority P1 \
+  --category bug \
+  --owner john
+```
+
+```bash Add Subtasks
+prlt ticket edit TKT-001 \
+  --add-subtask "Implement feature" \
+  --add-subtask "Write tests"
+```
+
+</CodeGroup>
+
+## Arguments
+
+<ParamField path="ticketId" type="string">
+  Ticket ID to edit. If not provided, shows an interactive dropdown.
+  
+  ```bash
+  prlt ticket edit TKT-001
+  ```
+</ParamField>
+
+## Flags
+
+### Basic Fields
+
+<ParamField path="--title" type="string">
+  New ticket title.
+  
+  ```bash
+  prlt ticket edit TKT-001 --title "Fix login bug in OAuth flow"
+  ```
+</ParamField>
+
+<ParamField path="--description" type="string">
+  New ticket description.
+  
+  ```bash
+  prlt ticket edit TKT-001 --description "Updated requirements"
+  ```
+</ParamField>
+
+<ParamField path="--priority" type="string">
+  New priority level. Use "none" to clear priority.
+  
+  ```bash
+  prlt ticket edit TKT-001 --priority P0
+  prlt ticket edit TKT-001 --priority none  # Clear priority
+  ```
+</ParamField>
+
+<ParamField path="--category" type="string">
+  New ticket category.
+  
+  ```bash
+  prlt ticket edit TKT-001 --category security
+  ```
+</ParamField>
+
+### Assignment
+
+<ParamField path="--owner" type="string">
+  Ticket owner (human responsible).
+  
+  ```bash
+  prlt ticket edit TKT-001 --owner john
+  ```
+</ParamField>
+
+<ParamField path="--assignee" type="string">
+  Ticket assignee (who executes - human or agent).
+  
+  ```bash
+  prlt ticket edit TKT-001 --assignee agent-1
+  ```
+</ParamField>
+
+### Subtasks
+
+<ParamField path="--add-subtask" type="string">
+  Add a subtask. Can be used multiple times.
+  
+  ```bash
+  prlt ticket edit TKT-001 \
+    --add-subtask "Implement feature" \
+    --add-subtask "Write tests" \
+    --add-subtask "Update docs"
+  ```
+</ParamField>
+
+<ParamField path="--clear-subtasks" type="boolean" default="false">
+  Clear all existing subtasks before adding new ones.
+  
+  ```bash
+  prlt ticket edit TKT-001 --clear-subtasks --add-subtask "New task"
+  ```
+</ParamField>
+
+### Labels
+
+<ParamField path="--add-label" type="string">
+  Add a label. Can be used multiple times.
+  
+  ```bash
+  prlt ticket edit TKT-001 --add-label frontend --add-label urgent
+  ```
+</ParamField>
+
+<ParamField path="--remove-label" type="string">
+  Remove a label. Can be used multiple times.
+  
+  ```bash
+  prlt ticket edit TKT-001 --remove-label urgent
+  ```
+</ParamField>
+
+### Acceptance Criteria
+
+<ParamField path="--add-ac" type="string">
+  Add an acceptance criterion. Can be used multiple times.
+  
+  ```bash
+  prlt ticket edit TKT-001 \
+    --add-ac "OAuth redirect works correctly" \
+    --add-ac "Session persists after login"
+  ```
+</ParamField>
+
+<ParamField path="--clear-ac" type="boolean" default="false">
+  Clear all existing acceptance criteria before adding new ones.
+  
+  ```bash
+  prlt ticket edit TKT-001 --clear-ac --add-ac "New criterion"
+  ```
+</ParamField>
+
+### Other Options
+
+<ParamField path="--interactive" type="boolean" default="false">
+  Force interactive mode with prompts for all fields.
+  
+  ```bash
+  prlt ticket edit TKT-001 --interactive
+  ```
+</ParamField>
+
+<ParamField path="--project" type="string">
+  Project ID (for interactive ticket selection).
+  
+  ```bash
+  prlt ticket edit --project mobile-app
+  ```
+</ParamField>
+
+<ParamField path="--json" type="boolean">
+  Output result as JSON.
+  
+  ```bash
+  prlt ticket edit TKT-001 --title "New title" --json
+  ```
+</ParamField>
+
+## Interactive Mode
+
+When run without flags (or with `--interactive`), prompts for all editable fields:
+
+1. **Title** - Update the ticket title
+2. **Description** - Multi-line description editor
+3. **Priority** - Select from workspace priority scale
+4. **Category** - Choose from standard or custom categories
+
+The interactive description editor supports structured markdown input with Ctrl+D to finish.
+
+## Examples
+
+### Update Title
+
+```bash
+prlt ticket edit TKT-001 --title "Fix OAuth login bug"
+```
+
+### Change Priority and Category
+
+```bash
+prlt ticket edit TKT-001 --priority P0 --category security
+```
+
+### Clear Priority
+
+```bash
+prlt ticket edit TKT-001 --priority none
+```
+
+### Assign Owner and Assignee
+
+```bash
+prlt ticket edit TKT-001 --owner john --assignee agent-1
+```
+
+### Add Multiple Subtasks
+
+```bash
+prlt ticket edit TKT-001 \
+  --add-subtask "Update auth middleware" \
+  --add-subtask "Add integration tests" \
+  --add-subtask "Update API documentation"
+```
+
+### Replace All Subtasks
+
+```bash
+prlt ticket edit TKT-001 \
+  --clear-subtasks \
+  --add-subtask "New task 1" \
+  --add-subtask "New task 2"
+```
+
+### Add Labels
+
+```bash
+prlt ticket edit TKT-001 --add-label frontend --add-label urgent
+```
+
+### Remove Labels
+
+```bash
+prlt ticket edit TKT-001 --remove-label urgent
+```
+
+### Add Acceptance Criteria
+
+```bash
+prlt ticket edit TKT-001 \
+  --add-ac "OAuth redirect works correctly" \
+  --add-ac "Session persists after login" \
+  --add-ac "Error messages are user-friendly"
+```
+
+### Replace Acceptance Criteria
+
+```bash
+prlt ticket edit TKT-001 \
+  --clear-ac \
+  --add-ac "All authentication flows work" \
+  --add-ac "Security audit passes"
+```
+
+### Interactive Edit
+
+```bash
+prlt ticket edit TKT-001 --interactive
+```
+
+### Select Ticket Interactively
+
+```bash
+prlt ticket edit
+```
+
+## Output
+
+### Standard Output
+
+```
+✅ Updated ticket TKT-001
+   Title: Fix OAuth login bug
+   Priority: P0
+   Category: security
+   Owner: john
+   Assignee: agent-1
+   Subtasks: 3 items
+   Labels: frontend, urgent
+```
+
+### JSON Output
+
+```json
+{
+  "success": true,
+  "ticket": {
+    "id": "TKT-001",
+    "title": "Fix OAuth login bug",
+    "priority": "P0",
+    "category": "security",
+    "statusName": "Backlog",
+    "statusCategory": "backlog",
+    "projectId": "mobile-app",
+    "assignee": "agent-1",
+    "owner": "john",
+    "branch": null,
+    "epicId": null,
+    "position": 0
+  }
+}
+```
+
+## Editing Best Practices
+
+<AccordionGroup>
+
+<Accordion title="Update tickets as requirements evolve">
+  Tickets aren't set in stone. As you learn more, update acceptance criteria, context, and scope.
+  
+  ```bash
+  prlt ticket edit TKT-001 \
+    --add-ac "New requirement discovered during implementation"
+  ```
+</Accordion>
+
+<Accordion title="Use subtasks for breaking down work">
+  Add subtasks as you identify implementation steps:
+  
+  ```bash
+  prlt ticket edit TKT-001 \
+    --add-subtask "Update auth service" \
+    --add-subtask "Add migration" \
+    --add-subtask "Update tests"
+  ```
+</Accordion>
+
+<Accordion title="Assign ownership before starting work">
+  Set owner and assignee to track responsibility:
+  
+  ```bash
+  prlt ticket edit TKT-001 --owner pm --assignee agent-1
+  ```
+</Accordion>
+
+<Accordion title="Use labels for organization">
+  Add labels to enable filtering and batch operations:
+  
+  ```bash
+  prlt ticket edit TKT-001 --add-label sprint-3 --add-label backend
+  ```
+</Accordion>
+
+<Accordion title="Clear priority when no longer urgent">
+  Remove priority when circumstances change:
+  
+  ```bash
+  prlt ticket edit TKT-001 --priority none
+  ```
+</Accordion>
+
+</AccordionGroup>
+
+## Combining Operations
+
+You can update multiple fields in a single command:
+
+```bash
+prlt ticket edit TKT-001 \
+  --title "New title" \
+  --description "Updated description" \
+  --priority P1 \
+  --category bug \
+  --owner john \
+  --assignee agent-1 \
+  --add-subtask "Task 1" \
+  --add-subtask "Task 2" \
+  --add-label urgent \
+  --add-ac "Criterion 1"
+```
+
+## What Can't Be Edited
+
+Some ticket properties cannot be changed via edit:
+
+- **Ticket ID**: Use `ticket move --to-project` for cross-project moves
+- **Project**: Use `ticket move --to-project` to move to a different project
+- **Status/Column**: Use `ticket move` to change the column
+- **Creation date**: Immutable timestamp
+- **Position**: Use `ticket move` with `--position` flag
+
+To change these properties, use the appropriate command:
+
+```bash
+# Move to different column
+prlt ticket move TKT-001 "In Progress"
+
+# Move to different project
+prlt ticket move TKT-001 --to-project other-project
+```
+
+## Related Commands
+
+<CardGroup cols={2}>
+
+<Card title="ticket view" icon="eye" href="/commands/ticket/view">
+  View current ticket details
+</Card>
+
+<Card title="ticket move" icon="arrows-turn-right" href="/commands/ticket/move">
+  Move ticket to different column or project
+</Card>
+
+<Card title="ticket create" icon="plus" href="/commands/ticket/create">
+  Create a new ticket
+</Card>
+
+<Card title="ticket list" icon="list" href="/commands/ticket/list">
+  List all tickets
+</Card>
+
+</CardGroup>

@@ -1,0 +1,688 @@
+---
+title: JSON Mode
+description: Use Proletariat programmatically with AI agents and scripts
+---
+
+JSON mode allows AI agents and scripts to interact with Proletariat programmatically. Instead of interactive prompts, commands return machine-readable JSON.
+
+## Overview
+
+JSON mode transforms Proletariat from an interactive CLI into a programmable API:
+
+**Without JSON mode:**
+```bash
+$ prlt ticket create
+? Title: Add OAuth
+? Column: Backlog
+? Priority: P1
+✓ Created TKT-042
+```
+
+**With JSON mode:**
+```bash
+$ prlt ticket create --json
+{
+  "prompt": {
+    "type": "list",
+    "message": "Select column:",
+    "choices": [
+      {
+        "name": "Backlog",
+        "value": "Backlog",
+        "command": "prlt ticket create --column Backlog --json"
+      }
+    ]
+  }
+}
+```
+
+AI agents parse the JSON, make decisions, and execute the next command.
+
+## Enabling JSON Mode
+
+Add `--json` flag to any command:
+
+```bash
+prlt <command> --json
+```
+
+**Auto-detection:**
+
+Proletariat automatically enables JSON mode when:
+- `stdout` is not a TTY (e.g., piped to another command)
+- `CI=true` environment variable is set
+
+## Response Format
+
+### Success Response
+
+When command completes successfully:
+
+```json
+{
+  "success": true,
+  "ticket": {
+    "id": "TKT-042",
+    "title": "Add OAuth support",
+    "statusName": "Backlog",
+    "priority": "P1"
+  },
+  "metadata": {
+    "command": "ticket create",
+    "timestamp": "2024-03-15T10:30:00Z"
+  }
+}
+```
+
+### Prompt Response
+
+When command needs input:
+
+```json
+{
+  "prompt": {
+    "type": "list",
+    "message": "Select column:",
+    "choices": [
+      {
+        "name": "Backlog (5 tickets)",
+        "value": "Backlog",
+        "command": "prlt ticket create --column Backlog --json"
+      },
+      {
+        "name": "Ready (2 tickets)",
+        "value": "Ready",
+        "command": "prlt ticket create --column Ready --json"
+      }
+    ]
+  },
+  "metadata": {
+    "command": "ticket create",
+    "context": {
+      "hint": "Provide column with: prlt ticket create --column \"Backlog\"",
+      "requiredFields": ["--column", "--title"],
+      "optionalFields": ["--priority", "--category", "--description"]
+    }
+  }
+}
+```
+
+### Error Response
+
+When command fails:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TICKET_NOT_FOUND",
+    "message": "Ticket TKT-042 not found"
+  },
+  "metadata": {
+    "command": "ticket view",
+    "flags": { "json": true }
+  }
+}
+```
+
+### Confirmation Response
+
+When action needs confirmation:
+
+```json
+{
+  "confirmationNeeded": true,
+  "plan": {
+    "tickets": [
+      { "id": "TKT-001", "title": "Add OAuth", "status": "Backlog" },
+      { "id": "TKT-002", "title": "Add rate limiting", "status": "Backlog" }
+    ],
+    "action": "implement",
+    "count": 2
+  },
+  "confirmCommand": "prlt work spawn TKT-001 TKT-002 --action implement --yes --json",
+  "message": "Ready to spawn 2 agents. Run with --yes to execute.",
+  "metadata": {
+    "command": "work spawn",
+    "resolvedPRMode": "no-pr"
+  }
+}
+```
+
+## Prompt Types
+
+JSON mode supports different prompt types:
+
+### List (Single Select)
+
+```json
+{
+  "prompt": {
+    "type": "list",
+    "message": "Select ticket:",
+    "choices": [
+      {
+        "name": "[P1] TKT-042 - Add OAuth",
+        "value": "TKT-042",
+        "command": "prlt work start TKT-042 --json"
+      }
+    ]
+  }
+}
+```
+
+### Checkbox (Multi-Select)
+
+```json
+{
+  "prompt": {
+    "type": "checkbox",
+    "message": "Select tickets to spawn:",
+    "choices": [
+      { "name": "[P1] TKT-042 - Add OAuth", "value": "TKT-042" },
+      { "name": "[P1] TKT-043 - Add rate limiting", "value": "TKT-043" }
+    ]
+  }
+}
+```
+
+### Input (Text Entry)
+
+```json
+{
+  "prompt": {
+    "type": "input",
+    "message": "Enter ticket title:",
+    "context": {
+      "hint": "Provide title with: prlt ticket create --title \"Your title\"",
+      "example": "prlt ticket create --title \"Add OAuth\""
+    }
+  }
+}
+```
+
+### Confirm (Yes/No)
+
+```json
+{
+  "prompt": {
+    "type": "list",
+    "message": "Continue?",
+    "choices": [
+      { "name": "Yes", "value": true },
+      { "name": "No", "value": false }
+    ]
+  }
+}
+```
+
+<Note>
+Proletariat never uses raw `confirm` prompts (y/n keypress). Instead, it uses `list` prompts with Yes/No choices for better UX with arrow key navigation.
+</Note>
+
+## AI Agent Integration
+
+AI agents can drive Proletariat by:
+1. Calling commands with `--json`
+2. Parsing the JSON response
+3. Making decisions based on prompts
+4. Executing follow-up commands
+
+### Example Flow
+
+<Steps>
+
+<Step title="Agent calls initial command">
+
+```bash
+prlt ticket create --json
+```
+
+Response:
+```json
+{
+  "prompt": {
+    "type": "list",
+    "message": "Select column:",
+    "choices": [
+      { "name": "Backlog", "value": "Backlog", "command": "prlt ticket create --column Backlog --json" }
+    ]
+  }
+}
+```
+
+</Step>
+
+<Step title="Agent selects from choices">
+
+Agent extracts the `command` field and executes:
+
+```bash
+prlt ticket create --column Backlog --json
+```
+
+Response:
+```json
+{
+  "prompt": {
+    "type": "input",
+    "message": "Enter ticket title:",
+    "context": {
+      "hint": "Provide title with: prlt ticket create --column Backlog --title \"Your title\""
+    }
+  }
+}
+```
+
+</Step>
+
+<Step title="Agent provides required input">
+
+Agent reads the `hint` and constructs:
+
+```bash
+prlt ticket create --column Backlog --title "Add OAuth" --json
+```
+
+Response:
+```json
+{
+  "success": true,
+  "ticket": {
+    "id": "TKT-042",
+    "title": "Add OAuth",
+    "statusName": "Backlog"
+  }
+}
+```
+
+</Step>
+
+</Steps>
+
+### Context Hints
+
+Prompt responses include helpful context:
+
+```json
+{
+  "prompt": {
+    "type": "input",
+    "message": "Enter ticket title:"
+  },
+  "metadata": {
+    "context": {
+      "hint": "Provide title with: prlt ticket create --column \"Backlog\" --title \"Your title\"",
+      "requiredFields": ["--title"],
+      "optionalFields": ["--priority", "--category", "--description"],
+      "example": "prlt ticket create --column \"Backlog\" --title \"Add OAuth\" --priority P1"
+    }
+  }
+}
+```
+
+AI agents use these hints to construct valid commands.
+
+## Common Patterns
+
+### Create Ticket
+
+**Full command:**
+
+```bash
+prlt ticket create \
+  --title "Add OAuth" \
+  --column Backlog \
+  --priority P1 \
+  --category feature \
+  --json
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "ticket": {
+    "id": "TKT-042",
+    "title": "Add OAuth",
+    "statusName": "Backlog",
+    "priority": "P1",
+    "category": "feature"
+  }
+}
+```
+
+### List Tickets
+
+```bash
+prlt ticket list --json
+```
+
+Response:
+
+```json
+[
+  {
+    "id": "TKT-042",
+    "title": "Add OAuth",
+    "statusName": "Backlog",
+    "priority": "P1",
+    "assignee": null
+  },
+  {
+    "id": "TKT-043",
+    "title": "Add rate limiting",
+    "statusName": "Ready",
+    "priority": "P1",
+    "assignee": "bold-bezos-1"
+  }
+]
+```
+
+### Spawn Agent
+
+**Two-step confirmation:**
+
+Step 1 - Get plan:
+
+```bash
+prlt work spawn TKT-042 --action implement --json
+```
+
+Response:
+
+```json
+{
+  "confirmationNeeded": true,
+  "plan": {
+    "tickets": [
+      { "id": "TKT-042", "title": "Add OAuth", "status": "Backlog" }
+    ],
+    "action": "implement",
+    "count": 1
+  },
+  "confirmCommand": "prlt work spawn TKT-042 --action implement --yes --json"
+}
+```
+
+Step 2 - Execute with `--yes`:
+
+```bash
+prlt work spawn TKT-042 --action implement --yes --json
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "execution": {
+    "id": "exec-abc123",
+    "ticketId": "TKT-042",
+    "agentName": "bold-bezos-1",
+    "status": "running"
+  }
+}
+```
+
+### List Executions
+
+```bash
+prlt execution list --json
+```
+
+Response:
+
+```json
+[
+  {
+    "id": "exec-abc123",
+    "ticketId": "TKT-042",
+    "agentName": "bold-bezos-1",
+    "status": "running",
+    "startedAt": "2024-03-15T10:30:00Z"
+  }
+]
+```
+
+## Exit Codes
+
+Proletariat uses standard exit codes:
+
+- **0**: Success (command completed)
+- **1**: Error (command failed)
+- **2**: Needs input (prompt returned)
+
+Use exit codes to handle responses:
+
+```bash
+if prlt ticket create --json > response.json; then
+  echo "Success"
+elif [ $? -eq 2 ]; then
+  echo "Needs input - see response.json"
+else
+  echo "Error occurred"
+fi
+```
+
+## Scripting Examples
+
+### Bash: Create 10 tickets
+
+```bash
+#!/bin/bash
+
+for i in {1..10}; do
+  prlt ticket create \
+    --title "Feature $i" \
+    --column Backlog \
+    --priority P2 \
+    --category feature \
+    --json
+done
+```
+
+### Python: Spawn all bugs
+
+```python
+import subprocess
+import json
+
+# Get all bugs
+result = subprocess.run(
+    ["prlt", "ticket", "list", "--json"],
+    capture_output=True,
+    text=True
+)
+tickets = json.loads(result.stdout)
+
+# Filter bugs
+bugs = [t for t in tickets if t["category"] == "bug"]
+
+# Spawn agents
+ticket_ids = [t["id"] for t in bugs]
+subprocess.run([
+    "prlt", "work", "spawn",
+    *ticket_ids,
+    "--action", "implement",
+    "--display", "background",
+    "--skip-permissions",
+    "--yes",
+    "--json"
+])
+```
+
+### Node.js: Monitor executions
+
+```javascript
+const { execSync } = require('child_process');
+
+function listExecutions() {
+  const output = execSync('prlt execution list --json', { encoding: 'utf-8' });
+  return JSON.parse(output);
+}
+
+function checkRunning() {
+  const executions = listExecutions();
+  const running = executions.filter(e => e.status === 'running');
+  console.log(`${running.length} agents running`);
+  
+  running.forEach(e => {
+    console.log(`  ${e.agentName}: ${e.ticketId}`);
+  });
+}
+
+setInterval(checkRunning, 5000);
+```
+
+## Error Handling
+
+Always check for errors in JSON responses:
+
+```bash
+#!/bin/bash
+
+response=$(prlt ticket create --title "Test" --json 2>&1)
+status=$?
+
+if [ $status -eq 0 ]; then
+  echo "Success: $(echo $response | jq -r '.ticket.id')"
+elif [ $status -eq 2 ]; then
+  echo "Needs input:"
+  echo $response | jq '.prompt.message'
+else
+  echo "Error: $(echo $response | jq -r '.error.message')"
+fi
+```
+
+## MCP Server
+
+Proletariat includes a built-in MCP server that wraps JSON mode for seamless AI integration:
+
+```bash
+prlt mcp-server
+```
+
+Add to Claude Code config (`~/.claude.json`):
+
+```json
+{
+  "mcpServers": {
+    "prlt": {
+      "command": "prlt",
+      "args": ["mcp-server"]
+    }
+  }
+}
+```
+
+AI can then call Proletariat tools directly without managing JSON mode.
+
+<Tip>
+See the [MCP Server docs](/mcp/overview) for full integration details.
+</Tip>
+
+## Best Practices
+
+<AccordionGroup>
+
+<Accordion title="Always provide full commands">
+  When scripting, provide all required flags to avoid interactive prompts:
+  ```bash
+  prlt ticket create --title "..." --column "..." --json
+  ```
+</Accordion>
+
+<Accordion title="Parse JSON safely">
+  Use proper JSON parsers (`jq`, `JSON.parse()`, etc.) instead of regex:
+  ```bash
+  ticket_id=$(echo $response | jq -r '.ticket.id')
+  ```
+</Accordion>
+
+<Accordion title="Check exit codes">
+  Exit code 2 means "needs input", not error. Handle separately:
+  ```bash
+  if [ $? -eq 2 ]; then
+    # Parse prompt and provide input
+  fi
+  ```
+</Accordion>
+
+<Accordion title="Use context hints">
+  AI agents should read `metadata.context.hint` for guidance on constructing commands.
+</Accordion>
+
+<Accordion title="Confirm before batch operations">
+  Commands return `confirmationNeeded: true` for destructive operations. Respect this by calling with `--yes`.
+</Accordion>
+
+</AccordionGroup>
+
+## Metadata Fields
+
+All JSON responses include metadata:
+
+```json
+{
+  "metadata": {
+    "command": "work spawn",
+    "flags": { "json": true, "action": "implement" },
+    "timestamp": "2024-03-15T10:30:00Z",
+    "resolvedPRMode": "no-pr",
+    "context": {
+      "projectId": "PROJ-001"
+    }
+  }
+}
+```
+
+**Common metadata fields:**
+- `command`: Command name
+- `flags`: Flags passed to command
+- `timestamp`: When command ran
+- `resolvedPRMode`: PR creation mode (`create-pr` or `no-pr`)
+- `context`: Additional context (project ID, hints, etc.)
+
+## Troubleshooting
+
+<AccordionGroup>
+
+<Accordion title="JSON output is malformed">
+  Ensure no debug logs are mixing with JSON. Set:
+  ```bash
+  export PRLT_LOG_LEVEL=error
+  ```
+</Accordion>
+
+<Accordion title="Command hangs waiting for input">
+  Provide all required flags. Check `metadata.context.requiredFields` in prompt response.
+</Accordion>
+
+<Accordion title="Error: Not a TTY">
+  This is expected when piping. JSON mode activates automatically.
+</Accordion>
+
+<Accordion title="Exit code is always 0">
+  Older versions may not respect exit codes. Upgrade to latest:
+  ```bash
+  brew upgrade prlt
+  ```
+</Accordion>
+
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="MCP Server" icon="plug" href="/mcp/overview">
+Integrate with Claude Code and other AI clients
+</Card>
+
+<Card title="Command Reference" icon="terminal" href="/commands/overview">
+Explore all available commands
+</Card>
+
+</CardGroup>

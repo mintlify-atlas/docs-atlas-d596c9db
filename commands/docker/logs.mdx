@@ -1,0 +1,481 @@
+---
+title: prlt docker logs
+description: View logs from Docker containers running agents
+---
+
+Display logs from agent containers to monitor activity and debug issues.
+
+## Basic Usage
+
+### View Logs by Execution
+
+Show container logs for execution:
+
+```bash
+prlt docker logs WORK-023
+```
+
+Output:
+
+```
+Logs for WORK-023 (alice → TKT-042)
+Container: abc123def456
+────────────────────────────────────────────────────────────
+
+2024-03-09T14:30:15.123Z Starting devcontainer...
+2024-03-09T14:30:16.456Z Building image vsc-alice-abc123
+2024-03-09T14:30:45.789Z Container started
+2024-03-09T14:30:46.012Z Running postCreateCommand...
+2024-03-09T14:31:00.234Z tmux session started
+2024-03-09T14:31:05.567Z Agent initialized
+```
+
+### View Logs by Agent
+
+Show logs for agent's container:
+
+```bash
+prlt docker logs alice
+```
+
+### View Logs by Container ID
+
+Direct container logs:
+
+```bash
+prlt docker logs abc123
+```
+
+## Flags
+
+<ParamField path="--follow" type="boolean" default="false">
+  Stream logs in real-time
+</ParamField>
+
+<ParamField path="-f" type="boolean">
+  Shorthand for --follow
+</ParamField>
+
+<ParamField path="--tail" type="integer" default="100">
+  Number of lines to show from the end
+</ParamField>
+
+<ParamField path="-n" type="integer">
+  Shorthand for --tail
+</ParamField>
+
+<ParamField path="--timestamps" type="boolean" default="false">
+  Show timestamps
+</ParamField>
+
+<ParamField path="-t" type="boolean">
+  Shorthand for --timestamps
+</ParamField>
+
+## Arguments
+
+<ParamField path="target" type="string" required>
+  Execution ID (WORK-XXX), agent name, or container ID
+</ParamField>
+
+## Examples
+
+### Follow Logs
+
+Stream logs in real-time:
+
+```bash
+prlt docker logs WORK-023 --follow
+```
+
+Output updates live:
+
+```
+Logs for WORK-023 (alice → TKT-042)
+Container: abc123def456
+────────────────────────────────────────────────────────────
+
+2024-03-09T14:30:15Z Starting...
+2024-03-09T14:30:20Z Agent working...
+2024-03-09T14:31:00Z Creating files...
+2024-03-09T14:31:30Z Running tests...
+```
+
+Press Ctrl+C to stop following.
+
+### Last N Lines
+
+Show specific number of lines:
+
+```bash
+prlt docker logs alice --tail 50
+```
+
+Displays last 50 lines.
+
+### With Timestamps
+
+Show precise timing:
+
+```bash
+prlt docker logs WORK-023 --timestamps
+```
+
+Output:
+
+```
+2024-03-09T14:30:15.123456789Z Starting devcontainer...
+2024-03-09T14:30:16.234567890Z Building image...
+2024-03-09T14:30:45.345678901Z Container started
+```
+
+### Tail and Follow
+
+Show recent logs, then stream:
+
+```bash
+prlt docker logs alice --tail 20 --follow
+```
+
+### All Logs
+
+Show complete log history:
+
+```bash
+prlt docker logs WORK-023 --tail -1
+```
+
+Note: Large logs may be truncated by Docker.
+
+## Log Content
+
+### Container Startup
+
+Initialization logs:
+
+```
+Starting devcontainer...
+Building image vsc-alice-abc123
+Step 1/10 : FROM node:18
+Step 2/10 : WORKDIR /workspace
+...
+Container started
+Running postCreateCommand...
+```
+
+### Application Output
+
+Agent process logs:
+
+```
+tmux session started: prlt-alice-work-023
+Agent initialized
+Reading ticket TKT-042...
+Analyzing requirements...
+Creating auth middleware...
+```
+
+### Error Messages
+
+Failures and errors:
+
+```
+Error: Failed to start agent
+Cannot find module 'express'
+at Function.Module._resolveFilename
+```
+
+### Shutdown
+
+Cleanup logs:
+
+```
+Received SIGTERM
+Closing connections...
+Agent stopped
+Container shutting down
+```
+
+## Target Resolution
+
+### By Execution ID
+
+```bash
+prlt docker logs WORK-023
+```
+
+1. Look up execution in database
+2. Get container ID
+3. Show container logs
+
+### By Agent Name
+
+```bash
+prlt docker logs alice
+```
+
+1. Find alice's containers
+2. Use most recent container
+3. Show logs
+
+### By Container ID
+
+```bash
+prlt docker logs abc123
+```
+
+1. Match container (prefix match)
+2. Show logs directly
+
+## Error Handling
+
+### Container Not Found
+
+```bash
+prlt docker logs WORK-999
+```
+
+Output:
+```
+Could not find container for execution: WORK-999
+```
+
+### Docker Not Running
+
+```bash
+prlt docker logs alice
+```
+
+Output:
+```
+Docker is not running. Start Docker Desktop or the Docker daemon first.
+```
+
+### Container Stopped
+
+Can still view logs:
+
+```bash
+prlt docker logs abc123
+```
+
+Shows historical logs even if container stopped.
+
+## Use Cases
+
+### Monitor Container Startup
+
+Watch container initialize:
+
+```bash
+prlt docker logs WORK-023 --follow
+```
+
+See:
+- Image build progress
+- Dependency installation
+- Environment setup
+- Agent launch
+
+### Debug Container Issues
+
+Investigate container failures:
+
+```bash
+prlt execution list --status failed
+prlt docker logs WORK-020 --tail 100
+```
+
+Find:
+- Build errors
+- Missing dependencies
+- Configuration issues
+- Runtime errors
+
+### Track Agent Activity
+
+Watch agent work:
+
+```bash
+prlt docker logs alice --follow
+```
+
+See:
+- Commands executed
+- File operations
+- Test results
+- Progress updates
+
+### Audit Container History
+
+Review complete container lifecycle:
+
+```bash
+prlt docker logs abc123 --timestamps
+```
+
+Review:
+- When container started
+- What commands ran
+- When errors occurred
+- When container stopped
+
+## Comparison with Execution Logs
+
+### Docker Logs (docker logs)
+
+**Container output**:
+- Container startup
+- Docker build logs
+- System messages
+- Container stderr/stdout
+
+**Use for**:
+- Container debugging
+- Build issues
+- System errors
+
+### Execution Logs (execution logs)
+
+**Agent output**:
+- Agent thoughts
+- Command execution
+- Work progress
+- Ticket completion
+
+**Use for**:
+- Agent monitoring
+- Work tracking
+- Ticket debugging
+
+**Access execution logs:**
+
+```bash
+prlt execution logs WORK-023
+```
+
+## Performance
+
+### Default Tail
+
+Last 100 lines for speed:
+
+```bash
+prlt docker logs alice
+```
+
+Faster than full log.
+
+### Increase for Context
+
+More lines when needed:
+
+```bash
+prlt docker logs alice --tail 500
+```
+
+### Follow for Efficiency
+
+Stream instead of polling:
+
+```bash
+prlt docker logs alice --follow
+```
+
+Uses `docker logs -f` efficiently.
+
+## Output Formats
+
+### Plain Text (default)
+
+Readable terminal output:
+
+```bash
+prlt docker logs alice
+```
+
+### With Timestamps
+
+Precise timing:
+
+```bash
+prlt docker logs alice --timestamps
+```
+
+Formats:
+- ISO 8601: `2024-03-09T14:30:15.123456789Z`
+- Nanosecond precision
+- UTC timezone
+
+### JSON Mode Not Supported
+
+Logs are raw container output.
+
+For structured data:
+```bash
+prlt execution list --json
+```
+
+## Log Persistence
+
+### Container Running
+
+Logs accumulate:
+- In Docker's log driver
+- Size can grow large
+- Rotate via Docker config
+
+### Container Removed
+
+Logs deleted:
+
+```bash
+docker rm abc123
+# Logs lost
+```
+
+Execution logs persist separately.
+
+### Save Logs
+
+Export before cleanup:
+
+```bash
+prlt docker logs alice > alice-container.log
+```
+
+## Tips
+
+<Tip>
+Use `--follow` during container startup to watch initialization in real-time.
+</Tip>
+
+<Tip>
+Add `--timestamps` when debugging to correlate container events with execution logs.
+</Tip>
+
+<Tip>
+Use `--tail 50` for quick checks without overwhelming output.
+</Tip>
+
+<Warning>
+Container logs can be very large. Use --tail to limit output and avoid performance issues.
+</Warning>
+
+<Warning>
+Docker logs are lost when container is removed. Export important logs before cleanup.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Shell Access" icon="terminal" href="/commands/docker/shell">
+Open interactive shell in container
+</Card>
+
+<Card title="Execution Logs" icon="file-lines" href="/commands/execution/logs">
+View agent execution logs instead
+</Card>
+
+</CardGroup>

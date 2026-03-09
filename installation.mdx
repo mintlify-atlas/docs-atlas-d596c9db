@@ -1,0 +1,213 @@
+---
+title: Installation
+description: Install Proletariat CLI on macOS, Linux, or Windows
+---
+
+Proletariat CLI (`prlt`) is available through multiple installation methods. Choose the one that works best for your platform.
+
+## Prerequisites
+
+Before installing Proletariat, ensure you have:
+
+- **Node.js 20+** (if using npm/pnpm)
+- **Git** for repository management
+- **Claude Code** for AI agent execution (`claude login` to authenticate)
+- **Tmux** for persistent agent sessions
+- **Docker** (optional, for isolated agent execution)
+
+## Installation Methods
+
+<Steps>
+  <Step title="Choose Your Installation Method">
+    Select the method that best fits your platform and preferences.
+  </Step>
+
+  <Step title="Install Proletariat">
+    <CodeGroup>
+      ```bash Homebrew (macOS - Recommended)
+      brew install chrismcdermut/proletariat/prlt
+      ```
+
+      ```bash npm
+      npm install -g @proletariat/cli
+      ```
+
+      ```bash pnpm
+      pnpm install -g @proletariat/cli
+      ```
+    </CodeGroup>
+
+    <Note>
+      **Homebrew** is the recommended method for macOS users. It works on both Apple Silicon (arm64) and Intel (x86_64) Macs without requiring a compiler.
+    </Note>
+
+    <Warning>
+      **pnpm 10+ users:** pnpm 10 blocks native addon build scripts by default. If `prlt` fails with a native module error after install, run `pnpm approve-builds` in the global store and reinstall, or use `npm` or `brew` instead.
+    </Warning>
+  </Step>
+
+  <Step title="Verify Installation">
+    Confirm that Proletariat is installed correctly:
+
+    ```bash
+    prlt --version
+    ```
+
+    You should see output similar to:
+
+    ```
+    @proletariat/cli/0.3.55 linux-x64 node-v20.18.1
+    ```
+  </Step>
+</Steps>
+
+## Upgrading
+
+Keep Proletariat up to date with the latest features and bug fixes.
+
+<CodeGroup>
+  ```bash Homebrew
+  brew update
+  brew upgrade prlt
+  ```
+
+  ```bash npm
+  npm update -g @proletariat/cli
+  ```
+
+  ```bash pnpm
+  pnpm update -g @proletariat/cli
+  ```
+</CodeGroup>
+
+## Platform-Specific Notes
+
+### macOS
+
+Homebrew is the recommended installation method for macOS:
+- Works on both Apple Silicon (M1/M2/M3) and Intel Macs
+- No compiler or build tools required
+- Automatic updates with `brew upgrade`
+
+### Linux
+
+For Linux systems, use npm or pnpm:
+- Requires Node.js 20 or higher
+- May require build tools for native modules: `build-essential` (Debian/Ubuntu) or `base-devel` (Arch)
+
+### Windows
+
+Windows users should use npm or pnpm through WSL2 (Windows Subsystem for Linux):
+- Install WSL2 with Ubuntu
+- Follow Linux installation instructions
+- Docker Desktop required for containerized agent execution
+
+## Environment Setup
+
+### GitHub Token (Optional)
+
+To enable automatic pull request creation, set your GitHub token:
+
+```bash
+export GITHUB_TOKEN="your_github_token_here"
+```
+
+Add this to your shell configuration file (`~/.bashrc`, `~/.zshrc`, etc.) to persist across sessions.
+
+### Claude Code Authentication
+
+Authenticate Claude Code for agent execution:
+
+```bash
+claude login
+```
+
+Follow the prompts to complete authentication.
+
+## Docker Setup (Optional)
+
+For secure, isolated agent execution in containers:
+
+<Steps>
+  <Step title="Install Docker">
+    Follow the official Docker installation guide for your platform:
+    - [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/)
+    - [Docker Engine for Linux](https://docs.docker.com/engine/install/)
+    - [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/)
+  </Step>
+
+  <Step title="Verify Docker">
+    ```bash
+    docker --version
+    ```
+  </Step>
+
+  <Step title="Start Docker">
+    Ensure Docker is running before spawning agents with the Docker executor.
+  </Step>
+</Steps>
+
+<Tip>
+  Docker provides full isolation for agents but adds overhead. For faster execution, use host mode with `--run-on-host`.
+</Tip>
+
+## Shell Autocomplete (Optional)
+
+Enable tab completion for Proletariat commands:
+
+```bash
+prlt autocomplete setup
+```
+
+Follow the prompts to add autocomplete to your shell.
+
+## Troubleshooting
+
+### Command not found
+
+If `prlt` is not found after installation:
+
+1. **npm/pnpm users**: Ensure npm global bin directory is in your PATH:
+   ```bash
+   echo $PATH
+   npm config get prefix
+   ```
+
+2. **Homebrew users**: Reinstall with:
+   ```bash
+   brew reinstall prlt
+   ```
+
+### Native module errors
+
+If you encounter native module build errors:
+
+1. **Install build tools**:
+   - macOS: `xcode-select --install`
+   - Ubuntu/Debian: `sudo apt-get install build-essential`
+   - Arch: `sudo pacman -S base-devel`
+
+2. **Use Homebrew** (macOS): Avoids compilation entirely
+
+### Permission errors
+
+If you get permission errors with npm:
+
+```bash
+sudo npm install -g @proletariat/cli
+```
+
+Or configure npm to use a different directory without sudo:
+```bash
+mkdir ~/.npm-global
+npm config set prefix '~/.npm-global'
+export PATH=~/.npm-global/bin:$PATH
+```
+
+## Next Steps
+
+Now that Proletariat is installed, you're ready to create your first workspace and spawn agents.
+
+<Card title="Quick Start" icon="rocket" href="/quickstart">
+  Create your first HQ, tickets, and spawn an agent
+</Card>

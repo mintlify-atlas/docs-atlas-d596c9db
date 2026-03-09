@@ -1,0 +1,419 @@
+---
+title: 'prlt ticket move'
+description: 'Move ticket(s) to a different column or project'
+icon: 'arrows-turn-right'
+---
+
+Move tickets between columns, change their position, or transfer them to different projects.
+
+## Usage
+
+<CodeGroup>
+
+```bash Move to Column
+prlt ticket move TKT-001 "In Progress"
+```
+
+```bash Interactive Selection
+prlt ticket move
+```
+
+```bash Set Position
+prlt ticket move TKT-001 Done --position 0
+```
+
+```bash Move to Different Project
+prlt ticket move TKT-001 --to-project other-project
+```
+
+```bash Bulk Move
+prlt ticket move --bulk
+```
+
+</CodeGroup>
+
+## Arguments
+
+<ParamField path="ticketId" type="string">
+  Ticket ID to move. If not provided, shows an interactive dropdown.
+  
+  ```bash
+  prlt ticket move TKT-001 "In Progress"
+  ```
+</ParamField>
+
+<ParamField path="column" type="string">
+  Target column name. If not provided, prompts for selection.
+  
+  ```bash
+  prlt ticket move TKT-001 "Done"
+  ```
+</ParamField>
+
+## Flags
+
+<ParamField path="--position" type="number">
+  Position within the column (0 = top).
+  
+  ```bash
+  prlt ticket move TKT-001 "In Progress" --position 0
+  ```
+</ParamField>
+
+<ParamField path="--to-project" type="string">
+  Move ticket to a different project. Uses Backlog or default column in target project.
+  
+  ```bash
+  prlt ticket move TKT-001 --to-project mobile-app
+  ```
+</ParamField>
+
+<ParamField path="--bulk" type="boolean" default="false">
+  Enable bulk mode to move multiple tickets at once.
+  
+  ```bash
+  prlt ticket move --bulk
+  ```
+</ParamField>
+
+<ParamField path="--force" type="boolean" default="false">
+  Skip confirmation prompt (bulk mode only).
+  
+  ```bash
+  prlt ticket move --bulk --force
+  ```
+</ParamField>
+
+<ParamField path="--project" type="string">
+  Source project ID (for scoping ticket selection).
+  
+  ```bash
+  prlt ticket move --project mobile-app
+  ```
+</ParamField>
+
+<ParamField path="--json" type="boolean">
+  Output result as JSON.
+  
+  ```bash
+  prlt ticket move TKT-001 Done --json
+  ```
+</ParamField>
+
+## Moving Within a Project
+
+### Move to Column
+
+Move a ticket to a different column:
+
+```bash
+prlt ticket move TKT-001 "In Progress"
+```
+
+Output:
+```
+✅ Moved ticket TKT-001
+   From: Backlog
+   To: In Progress
+```
+
+### Set Position in Column
+
+Move to top of column:
+
+```bash
+prlt ticket move TKT-001 "In Progress" --position 0
+```
+
+Move to specific position:
+
+```bash
+prlt ticket move TKT-001 Done --position 5
+```
+
+### Interactive Selection
+
+Select ticket and column interactively:
+
+```bash
+prlt ticket move
+```
+
+Prompts:
+1. Select ticket to move
+2. Choose target column
+
+## Moving Between Projects
+
+### Basic Cross-Project Move
+
+Move to a different project:
+
+```bash
+prlt ticket move TKT-001 --to-project web-app
+```
+
+The ticket is placed in the target project's default/Backlog column.
+
+### Move to Specific Column in Different Project
+
+Specify both project and column:
+
+```bash
+prlt ticket move TKT-001 "Ready" --to-project web-app
+```
+
+If the target project doesn't have a "Ready" column, uses the default column and shows a note.
+
+### Interactive Cross-Project Move
+
+Select interactively when multiple projects exist:
+
+```bash
+prlt ticket move
+```
+
+Prompts:
+1. Move to different column or different project?
+2. Select target project (if choosing project move)
+3. Select target column in new project
+
+## Bulk Operations
+
+### Bulk Move Tickets
+
+Move multiple tickets to the same column:
+
+```bash
+prlt ticket move --bulk
+```
+
+Interactive flow:
+1. Select multiple tickets (checkbox list)
+2. Choose target column
+3. Confirm the move
+
+Output:
+```
+📦 Move Multiple Tickets
+
+? Select tickets to move:
+  ◉ TKT-001 - Fix login bug (Backlog)
+  ◉ TKT-002 - Add dark mode (Backlog)
+  ◯ TKT-003 - Update docs (Backlog)
+
+? Move selected tickets to: In Progress
+
+This will move:
+  • TKT-001: Fix login bug
+  • TKT-002: Add dark mode
+  → to column: In Progress
+
+? Continue? Yes, move tickets
+
+Moved TKT-001 to In Progress
+Moved TKT-002 to In Progress
+
+Moved 2 ticket(s)
+```
+
+### Bulk Move with Force
+
+Skip confirmation:
+
+```bash
+prlt ticket move --bulk --force
+```
+
+## Examples
+
+### Move to In Progress
+
+```bash
+prlt ticket move TKT-001 "In Progress"
+```
+
+### Move to Top of Done
+
+```bash
+prlt ticket move TKT-001 Done --position 0
+```
+
+### Move to Different Project
+
+```bash
+prlt ticket move TKT-001 --to-project web-app
+```
+
+### Move to Specific Column in Different Project
+
+```bash
+prlt ticket move TKT-001 Backlog --to-project mobile-app
+```
+
+### Interactive Move
+
+```bash
+prlt ticket move
+```
+
+### Bulk Move
+
+```bash
+prlt ticket move --bulk
+```
+
+### Bulk Move Without Confirmation
+
+```bash
+prlt ticket move --bulk --force
+```
+
+## JSON Output
+
+```json
+{
+  "success": true,
+  "ticket": {
+    "id": "TKT-001",
+    "title": "Fix login bug",
+    "priority": "P1",
+    "category": "bug",
+    "statusName": "In Progress",
+    "statusCategory": "started",
+    "projectId": "mobile-app",
+    "assignee": null,
+    "owner": null,
+    "branch": null,
+    "epicId": null,
+    "position": 0
+  }
+}
+```
+
+## Common Workflows
+
+<AccordionGroup>
+
+<Accordion title="Move ticket to start work">
+  Move from Backlog to In Progress when beginning work:
+  
+  ```bash
+  prlt ticket move TKT-001 "In Progress"
+  prlt work spawn TKT-001
+  ```
+</Accordion>
+
+<Accordion title="Prioritize urgent work">
+  Move urgent ticket to top of column:
+  
+  ```bash
+  prlt ticket move TKT-001 "Ready" --position 0
+  ```
+</Accordion>
+
+<Accordion title="Transfer work between teams">
+  Move ticket to different project:
+  
+  ```bash
+  prlt ticket move TKT-001 --to-project backend-team
+  ```
+</Accordion>
+
+<Accordion title="Reorganize backlog">
+  Use bulk mode to organize multiple tickets:
+  
+  ```bash
+  prlt ticket move --bulk
+  # Select tickets to move to "Ready"
+  ```
+</Accordion>
+
+<Accordion title="Complete multiple tickets">
+  Bulk move finished work to Done:
+  
+  ```bash
+  prlt ticket move --bulk
+  # Select completed tickets
+  # Move to "Done"
+  ```
+</Accordion>
+
+</AccordionGroup>
+
+## Position Behavior
+
+- **Position 0**: Top of the column
+- **No position flag**: Appended to bottom of column
+- **Position > ticket count**: Placed at bottom
+- Existing tickets shift down to make room
+
+## Column Validation
+
+The command validates that the target column exists:
+
+```bash
+prlt ticket move TKT-001 "Invalid Column"
+# Error: Invalid column "Invalid Column". 
+# Available columns: Backlog, Ready, In Progress, Review, Done
+```
+
+## Cross-Project Move Behavior
+
+When moving to a different project:
+
+1. **Ticket is removed** from source project
+2. **Ticket is added** to target project
+3. **Column is resolved**:
+   - If specified column exists in target, use it
+   - If specified column doesn't exist, use default/Backlog
+   - If no column specified, use default/Backlog
+4. **Position resets** to bottom of target column
+5. **Project-specific data preserved** (title, description, priority, etc.)
+6. **Epic link cleared** (epics are project-specific)
+
+## Error Handling
+
+### Ticket Not Found
+
+```bash
+prlt ticket move INVALID-001 Done
+# Error: Ticket "INVALID-001" not found.
+```
+
+### Invalid Column
+
+```bash
+prlt ticket move TKT-001 "Invalid"
+# Error: Invalid column "Invalid". Available columns: Backlog, In Progress, Done
+```
+
+### Already in Column
+
+```bash
+prlt ticket move TKT-001 Backlog
+# (when already in Backlog)
+# Warning: Ticket "TKT-001" is already in "Backlog".
+```
+
+## Related Commands
+
+<CardGroup cols={2}>
+
+<Card title="ticket view" icon="eye" href="/commands/ticket/view">
+  View ticket details
+</Card>
+
+<Card title="ticket edit" icon="pen" href="/commands/ticket/edit">
+  Edit ticket properties
+</Card>
+
+<Card title="board view" icon="table-columns" href="/commands/board/view">
+  View full board layout
+</Card>
+
+<Card title="ticket list" icon="list" href="/commands/ticket/list">
+  List tickets by column
+</Card>
+
+</CardGroup>

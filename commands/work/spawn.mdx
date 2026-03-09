@@ -1,0 +1,355 @@
+---
+title: prlt work spawn
+description: Spawn work for multiple tickets in batch mode
+---
+
+## Usage
+
+```bash
+prlt work spawn [TICKET-IDS...] [OPTIONS]
+```
+
+Batch spawn agents for multiple tickets. Supports three selection modes: spawn all tickets in a column, multi-select specific tickets, or spawn by positional ticket IDs. Can also pull issues from external sources (Linear, Jira) and spawn agents for them.
+
+## Arguments
+
+<ParamField path="TICKET-IDS" type="string[]" optional>
+  One or more ticket IDs to spawn work for. If provided, skips interactive selection.
+  
+  Examples: `prlt work spawn TKT-001 TKT-002 TKT-003`
+</ParamField>
+
+## Selection Modes
+
+<ParamField path="--all" type="boolean" default="false">
+  Spawn all tickets in a selected column. Prompts to select column if `--column` not provided.
+</ParamField>
+
+<ParamField path="--many" type="boolean" default="false">
+  Multi-select specific tickets to spawn using checkboxes.
+</ParamField>
+
+<ParamField path="--count" type="number">
+  Spawn top N tickets by rank order. Can be combined with filters (`--category`, `--priority`, `--epic`, `--status`) or `--diet` balancing.
+</ParamField>
+
+<ParamField path="--column" type="string">
+  Column name to spawn tickets from (required for non-interactive `--all` mode).
+</ParamField>
+
+## Execution Mode Flags
+
+Same as [`prlt work start`](/commands/work/start). See [Execution Modes](/concepts/execution-modes) for details.
+
+<ParamField path="--run-on-host" type="boolean" default="false">
+  Run on host even if devcontainer exists (bypasses sandbox).
+</ParamField>
+
+<ParamField path="--display" type="string">
+  Display mode:
+  - `terminal` - Open in new terminal tabs (recommended for batch)
+  - `background` - Run detached, reattach with `prlt session attach`
+  
+  Note: `foreground` is not available for batch mode.
+</ParamField>
+
+<ParamField path="--skip-permissions" type="boolean" default="false">
+  Skip permission prompts (danger mode). Applies to all spawned agents.
+</ParamField>
+
+<ParamField path="--session" type="string" default="tmux">
+  Session manager inside container: `tmux` or `direct`.
+</ParamField>
+
+## Action Flags
+
+<ParamField path="--action" type="string">
+  Action to perform for all tickets (e.g., `implement`, `groom`, `review`, `custom`). Prompts if not provided.
+</ParamField>
+
+<ParamField path="--message" type="string">
+  Additional instructions for the agent, appended to any action prompt.
+</ParamField>
+
+## Filtering & Selection
+
+<ParamField path="--diet" type="boolean" default="false">
+  Apply diet-balanced category weighting when selecting tickets with `--count`. Distributes tickets across categories according to workspace diet configuration.
+</ParamField>
+
+<ParamField path="--category" type="string">
+  Filter tickets by category (comma-separated). Example: `ship,grow`
+</ParamField>
+
+<ParamField path="--priority" type="string">
+  Filter tickets by priority (comma-separated). Example: `P0,P1`
+</ParamField>
+
+<ParamField path="--epic" type="string">
+  Filter tickets by epic ID.
+</ParamField>
+
+<ParamField path="--status" type="string">
+  Filter tickets by status name (e.g., `Backlog`, `Ready`).
+</ParamField>
+
+## External Issue Integration
+
+<ParamField path="--from" type="string">
+  Source override in `provider[:context]` format:
+  - `pmo` - Use PMO tickets (default)
+  - `linear[:TEAM]` - Pull from Linear (optionally specify team key)
+  - `jira[:PROJECT]` - Pull from Jira (optionally specify project key)
+  
+  Examples: `linear:ENG`, `jira:PROJ`
+</ParamField>
+
+<ParamField path="--from-linear" type="boolean" default="false" deprecated>
+  Pull issues from Linear, mirror into PMO, then spawn agents. Use `--from linear` instead.
+</ParamField>
+
+### Linear Options
+
+<ParamField path="--linear-team" type="string">
+  Linear team key to pull issues from (e.g., `ENG`). Overrides workspace default team.
+</ParamField>
+
+<ParamField path="--linear-state" type="string">
+  Filter Linear issues by state name (e.g., `In Progress`).
+</ParamField>
+
+<ParamField path="--linear-label" type="string">
+  Filter Linear issues by label name.
+</ParamField>
+
+<ParamField path="--linear-limit" type="number" default="20">
+  Maximum number of Linear issues to pull.
+</ParamField>
+
+### Jira Options
+
+<ParamField path="--jira-project" type="string">
+  Jira project key to pull issues from (e.g., `PROJ`). Overrides workspace default project.
+</ParamField>
+
+<ParamField path="--jira-jql" type="string">
+  Custom JQL query for filtering Jira issues.
+</ParamField>
+
+<ParamField path="--jira-limit" type="number" default="20">
+  Maximum number of Jira issues to pull.
+</ParamField>
+
+## Agent Assignment
+
+<ParamField path="--strategy" type="string" default="round-robin">
+  Agent selection strategy when using staff agents:
+  - `round-robin` - Distribute tickets evenly across agents
+  - `least-busy` - Assign to agents with fewest active tasks
+  - `random` - Random assignment
+  
+  Note: Ephemeral agents are created on-demand (one per ticket) and ignore this setting.
+</ParamField>
+
+## Pull Request Options
+
+<ParamField path="--create-pr" type="boolean" default="false">
+  Create PR when work is ready for all spawned tickets.
+</ParamField>
+
+<ParamField path="--no-pr" type="boolean" default="false" deprecated>
+  **Deprecated:** Skip PR creation. Use `--create-pr` instead (PR creation is off by default).
+</ParamField>
+
+## Other Options
+
+<ParamField path="--dry-run" type="boolean" default="false">
+  Show what would be spawned without executing. Useful for previewing batch operations.
+</ParamField>
+
+<ParamField path="--limit" type="number">
+  Maximum number of tickets to spawn (hard cap across all selection modes).
+</ParamField>
+
+<ParamField path="--force" type="boolean" default="false">
+  Start even if work already in progress.
+</ParamField>
+
+<ParamField path="--yes" type="boolean" default="false">
+  Skip confirmation prompts (for non-TTY/scripted execution).
+</ParamField>
+
+<ParamField path="--per-ticket" type="boolean" default="false">
+  Prompt for settings per ticket instead of using same settings for all (batch mode).
+</ParamField>
+
+<ParamField path="--executor" type="string">
+  Override executor: `claude-code`, `codex`, or `custom`.
+</ParamField>
+
+<ParamField path="--output" type="string">
+  Output mode: `interactive` or `print` (batch mode only).
+</ParamField>
+
+<ParamField path="--focus" type="boolean" default="false">
+  Bring terminal to foreground when opening new tabs.
+</ParamField>
+
+<ParamField path="--clone" type="boolean" default="false">
+  Use independent git clone instead of worktree.
+</ParamField>
+
+## Examples
+
+### Interactive Mode
+
+```bash
+# Interactive selection (prompts for All/Many/Count)
+prlt work spawn
+
+# Multi-select tickets with checkboxes
+prlt work spawn --many
+
+# Spawn all tickets in a column (prompts to select column)
+prlt work spawn --all
+```
+
+### Spawn by Ticket IDs
+
+```bash
+# Spawn specific tickets
+prlt work spawn TKT-001 TKT-002
+
+# With custom prompt
+prlt work spawn TKT-001 TKT-002 --action custom --message "Add unit tests"
+```
+
+### Count-Based Selection
+
+```bash
+# Spawn next 5 tickets by rank
+prlt work spawn --count 5 --action implement
+
+# Top 10 with diet balancing
+prlt work spawn --count 10 --diet --action groom
+
+# Top 5 filtered by category
+prlt work spawn --count 5 --category ship --action implement
+
+# Top 5 filtered by priority
+prlt work spawn --count 5 --priority P0 --action implement
+
+# Combined filters
+prlt work spawn --count 10 --diet --category ship,grow --action groom
+```
+
+### Spawn All from Column
+
+```bash
+# Interactive column selection
+prlt work spawn --all
+
+# Specific column
+prlt work spawn --all --column Backlog
+
+# With action
+prlt work spawn --all --column Backlog --action implement
+```
+
+### Execution Modes
+
+```bash
+# Open each agent in new terminal tab
+prlt work spawn --count 5 --display terminal
+
+# Run on host, bypassing devcontainer
+prlt work spawn --count 5 --run-on-host --display terminal
+
+# Run in background (detached)
+prlt work spawn --count 5 --display background
+
+# Skip permissions (danger mode)
+prlt work spawn --count 5 --skip-permissions
+```
+
+### External Issue Integration
+
+```bash
+# Pull all Linear issues and spawn
+prlt work spawn --from-linear
+
+# Pull specific Linear issues
+prlt work spawn --from-linear ENG-123 ENG-124
+
+# Pull from specific Linear team
+prlt work spawn --from linear:ENG
+
+# Filter Linear issues by state
+prlt work spawn --from-linear --linear-state "In Progress"
+
+# Pull Jira issues
+prlt work spawn --from jira:PROJ
+
+# Pull specific Jira issues
+prlt work spawn --from jira:PROJ PROJ-123 PROJ-456
+
+# Custom JQL query
+prlt work spawn --from jira --jira-project PROJ --jira-jql "priority = High"
+
+# Set default work source for workspace
+prlt work source set linear:ENG
+prlt work spawn  # Uses linear:ENG by default
+```
+
+### Dry Run
+
+```bash
+# Preview what would be spawned
+prlt work spawn --count 10 --diet --dry-run
+
+# Preview Linear import
+prlt work spawn --from-linear --dry-run
+```
+
+### Pull Requests
+
+```bash
+# Create PR when work is ready
+prlt work spawn --count 5 --create-pr
+```
+
+### Fully Automated Execution
+
+```bash
+# Non-interactive batch spawn
+prlt work spawn TKT-001 TKT-002 TKT-003 \
+  --action implement \
+  --display terminal \
+  --skip-permissions \
+  --yes
+
+# JSON mode for AI agents
+prlt work spawn \
+  --count 10 \
+  --action implement \
+  --display terminal \
+  --run-on-host \
+  --skip-permissions \
+  --json \
+  --yes
+```
+
+## Related Commands
+
+- [`prlt work start`](/commands/work/start) - Start work on a single ticket
+- [`prlt work ready`](/commands/work/ready) - Mark work as ready for review
+- [`prlt work complete`](/commands/work/complete) - Mark work as complete
+- [`prlt work source set`](/commands/work/source-set) - Set default work source
+- [`prlt linear connect`](/commands/linear/connect) - Configure Linear integration
+- [`prlt jira auth`](/commands/jira/auth) - Configure Jira integration
+
+## See Also
+
+- [Execution Modes](/concepts/execution-modes) - Understanding display and environment modes
+- [Diet Balancing](/concepts/diet) - Category weighting for balanced work selection
+- [External Issues](/concepts/external-issues) - Linear and Jira integration

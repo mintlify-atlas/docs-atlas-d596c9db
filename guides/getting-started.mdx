@@ -1,0 +1,228 @@
+---
+title: Getting Started
+description: Step-by-step guide to get up and running with Proletariat CLI
+---
+
+This guide walks you through setting up Proletariat and spawning your first agent to work on a ticket.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js 18+** installed
+- **Git** installed and configured
+- **Claude Code** installed and authenticated (`claude login`)
+- **Docker** (optional, for sandboxed execution)
+- **GitHub token** set as `GITHUB_TOKEN` environment variable (for PR creation)
+
+## Installation
+
+<CodeGroup>
+
+```bash Homebrew (macOS)
+brew install chrismcdermut/proletariat/prlt
+```
+
+```bash npm (all platforms)
+npm install -g @proletariat/cli
+```
+
+```bash pnpm
+pnpm install -g @proletariat/cli
+```
+
+</CodeGroup>
+
+Verify the installation:
+
+```bash
+prlt --version
+```
+
+<Note>
+**pnpm 10+ users**: If you encounter native module errors, run `pnpm approve-builds` in the global store and reinstall.
+</Note>
+
+## Quick Start
+
+<Steps>
+
+<Step title="Create your HQ workspace">
+
+Run `prlt new` to create a new headquarters workspace:
+
+```bash
+prlt new
+```
+
+You'll be prompted to:
+- Choose a workspace name
+- Select a theme for agent names (billionaires, toyotas, companies)
+- Add repositories (optional)
+- Configure workflow
+
+</Step>
+
+<Step title="Create your first ticket">
+
+Create a ticket with a clear, concrete outcome:
+
+```bash
+prlt ticket create --title "Add OAuth support" --category feature
+```
+
+Or use the interactive mode for a guided prompt:
+
+```bash
+prlt ticket create
+```
+
+**Ticket writing tips:**
+- Be specific about the desired outcome
+- Include acceptance criteria ("Done when...")
+- Provide context about files, patterns, or constraints
+- List what's explicitly NOT in scope
+
+</Step>
+
+<Step title="Spawn an agent">
+
+Launch an agent to work on your ticket:
+
+```bash
+prlt work spawn
+```
+
+You'll be prompted to:
+1. Select tickets to work on
+2. Choose execution environment (Docker or host)
+3. Select action (implement, groom, review)
+4. Choose display mode (terminal or background)
+
+The agent will:
+- Create a new git branch
+- Set up an isolated workspace
+- Start working on the ticket
+- Optionally open a PR when done
+
+</Step>
+
+<Step title="Monitor progress">
+
+Watch your agent work:
+
+```bash
+# View the kanban board
+prlt board
+
+# List running executions
+prlt execution list
+
+# View agent output
+prlt execution logs <execution-id>
+```
+
+</Step>
+
+<Step title="Review and merge">
+
+When the agent completes work:
+
+1. Review the PR on GitHub
+2. Test the changes
+3. Merge when satisfied
+4. The ticket automatically moves to "Done"
+
+</Step>
+
+</Steps>
+
+## Common Workflows
+
+### Single Ticket Development
+
+For focused work on one ticket:
+
+```bash
+prlt ticket create --title "Add rate limiting" --priority P1 --category feature
+prlt work start TKT-001 --display terminal
+```
+
+### Parallel Development
+
+Work on multiple tickets simultaneously:
+
+```bash
+prlt work spawn TKT-001 TKT-002 TKT-003 --display background
+```
+
+Each agent gets:
+- Its own git branch
+- Isolated workspace (Docker container or worktree)
+- Independent execution
+
+### Bug Bash
+
+Spawn agents for all bugs in the backlog:
+
+```bash
+prlt work spawn --count 10 --category bug --action implement
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Creating Tickets" icon="ticket" href="/guides/creating-tickets">
+Learn best practices for writing effective tickets
+</Card>
+
+<Card title="Spawning Agents" icon="robot" href="/guides/spawning-agents">
+Master different agent execution modes and options
+</Card>
+
+<Card title="Parallel Agents" icon="layer-group" href="/guides/parallel-agents">
+Scale up with multiple agents working simultaneously
+</Card>
+
+<Card title="Using Themes" icon="palette" href="/guides/using-themes">
+Customize agent naming with themes
+</Card>
+
+</CardGroup>
+
+## Troubleshooting
+
+### Docker not running
+
+If you see "Docker not available" errors:
+
+```bash
+# Check Docker status
+docker ps
+
+# Or run on host instead
+prlt work start TKT-001 --run-on-host
+```
+
+### Claude not authenticated
+
+```bash
+claude login
+```
+
+### GitHub token not set
+
+```bash
+export GITHUB_TOKEN=ghp_your_token_here
+```
+
+<Tip>
+Add `GITHUB_TOKEN` to your shell profile (`~/.zshrc` or `~/.bashrc`) to persist it.
+</Tip>
+
+## Getting Help
+
+- **Discord**: Join the community at [discord.gg/tmZyjNNSvw](https://discord.gg/tmZyjNNSvw)
+- **GitHub Issues**: Report bugs at [github.com/chrismcdermut/proletariat/issues](https://github.com/chrismcdermut/proletariat/issues)
+- **Book a call**: Get help setting up at [cal.com/chrismcdermut](https://cal.com/chrismcdermut)

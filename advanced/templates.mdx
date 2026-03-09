@@ -1,0 +1,449 @@
+---
+title: 'Templates'
+description: 'Reusable templates for tickets and actions'
+---
+
+Templates enable you to standardize common workflows by saving and reusing ticket structures and action prompts.
+
+## Template Types
+
+Proletariat supports two types of templates:
+
+1. **Ticket Templates** - Save ticket structure for reuse
+2. **Action Templates** - Reusable agent instructions
+
+## Ticket Templates
+
+Ticket templates capture the structure of an existing ticket for reuse.
+
+### Creating Ticket Templates
+
+Save a ticket as a template:
+
+```bash
+# Save from existing ticket
+prlt ticket template save TKT-001 "Bug Report Template"
+
+# With description
+prlt ticket template save TKT-042 "Feature Request" \
+  --description "Standard feature request with acceptance criteria"
+```
+
+**Interactive mode:**
+
+```bash
+prlt ticket template save
+# Prompts for:
+# 1. Select ticket (from list)
+# 2. Template name
+# 3. Description (optional)
+```
+
+### What Gets Saved
+
+Ticket templates preserve:
+
+- **Title format** - Reusable with placeholders
+- **Description structure** - Problem statement, requirements
+- **Subtasks** - Checklist items
+- **Category** - bug, feature, task, etc.
+- **Priority** - P1, P2, P3, P4
+- **Acceptance criteria** - Success conditions
+- **Labels** - Categorization tags
+
+**Not saved:**
+- Specific ticket ID
+- Assignee
+- Status
+- Timestamps
+- Epic/spec links
+
+### Listing Templates
+
+```bash
+# List all templates
+prlt template list
+
+# List only ticket templates
+prlt ticket template list
+```
+
+**Example output:**
+
+```
+Ticket Templates:
+
+ID              Name                  Description                      Created
+TPL-001         Bug Report            Standard bug template            2024-01-15
+TPL-002         Feature Request       Feature with acceptance criteria 2024-01-16
+TPL-003         API Endpoint          REST API endpoint template       2024-01-20
+```
+
+### Applying Templates
+
+Create new tickets from templates:
+
+```bash
+# Apply template to create ticket
+prlt ticket template apply TPL-001
+
+# Or via ticket creation
+prlt ticket create --from-template TPL-001
+```
+
+**Interactive flow:**
+
+```bash
+prlt ticket template apply
+# 1. Select template from list
+# 2. Customize title
+# 3. Edit description (optional)
+# 4. Set priority (optional)
+# 5. Add labels (optional)
+# 6. Ticket created!
+```
+
+### Template Placeholders
+
+Use placeholders in template titles and descriptions:
+
+```markdown
+# Template title:
+"Add {feature_name} to {component}"
+
+# On apply, prompts for values:
+# feature_name: OAuth
+# component: Auth Module
+
+# Result:
+"Add OAuth to Auth Module"
+```
+
+### Deleting Templates
+
+```bash
+# Delete specific template
+prlt template delete TPL-001
+
+# With confirmation
+prlt template delete TPL-001 --yes
+```
+
+## Action Templates
+
+Action templates define reusable agent instructions for common tasks.
+
+### Built-in Actions
+
+Proletariat includes default actions:
+
+| Action | Description | Modifies Code |
+|--------|-------------|---------------|
+| `implement` | Write code for feature/fix | Yes |
+| `groom` | Refine ticket requirements | No |
+| `review` | Code review and feedback | No |
+| `test` | Write tests for feature | Yes |
+| `document` | Write documentation | Yes |
+| `refactor` | Improve code structure | Yes |
+
+### Creating Action Templates
+
+```bash
+# Create new action
+prlt action create "Security Review" \
+  --prompt "Review code for security vulnerabilities..."
+
+# With full options
+prlt action create "Write Docs" \
+  --prompt "Document this feature with examples" \
+  --description "Generate documentation" \
+  --suggested-for completed \
+  --move-to done
+```
+
+**Interactive mode:**
+
+```bash
+prlt action create
+# Prompts for:
+# 1. Action name
+# 2. Prompt (multiline editor)
+# 3. Description (optional)
+# 4. Suggested for categories (optional)
+# 5. Move ticket to category after action (optional)
+```
+
+### Action Properties
+
+**Name**: Short identifier for the action
+
+```bash
+prlt action create "API Review"
+```
+
+**Prompt**: Instructions sent to the agent
+
+```bash
+--prompt "Review API endpoints for:
+- Authentication
+- Rate limiting
+- Error handling
+- Documentation"
+```
+
+**Description**: Short summary of what the action does
+
+```bash
+--description "Comprehensive API security review"
+```
+
+**Suggested For**: State categories where this action is recommended
+
+```bash
+--suggested-for completed,started
+```
+
+Options:
+- `backlog` - Unstarted tickets
+- `unstarted` - Not yet started
+- `started` - Work in progress
+- `completed` - Finished work
+- `canceled` - Canceled tickets
+
+**Move To**: Automatically move ticket after action completes
+
+```bash
+--move-to completed
+```
+
+### Listing Actions
+
+```bash
+# List all actions
+prlt action list
+```
+
+**Example output:**
+
+```
+Actions:
+
+ID         Name              Description                    Suggested For
+implement  Implement         Write code for this ticket     unstarted
+groom      Groom             Refine requirements            backlog
+review     Review            Code review                    completed
+security   Security Review   Check for vulnerabilities      completed
+```
+
+### Using Actions
+
+Select action when starting work:
+
+```bash
+# Use specific action
+prlt work start TKT-001 --action security
+
+# Interactive selection
+prlt work start TKT-001
+# Prompts: "What should the agent do?"
+# Shows suggested actions first
+```
+
+**Suggested actions** appear at the top based on ticket status:
+
+```bash
+# Ticket in backlog → suggests "groom"
+# Ticket unstarted → suggests "implement"
+# Ticket completed → suggests "review"
+```
+
+### Custom Prompts
+
+Override action with custom prompt:
+
+```bash
+# One-off custom instructions
+prlt work start TKT-001 \
+  --prompt "Add unit tests for the API endpoints"
+
+# Custom action with reusable template
+prlt action create "API Tests" \
+  --prompt "Write comprehensive tests including:
+  - Unit tests
+  - Integration tests
+  - Error cases"
+```
+
+### Updating Actions
+
+```bash
+# Update existing action
+prlt action update security \
+  --prompt "Enhanced security review checklist..."
+
+# Update description
+prlt action update security \
+  --description "Comprehensive security audit"
+```
+
+### Deleting Actions
+
+```bash
+# Delete action
+prlt action delete security
+
+# Built-in actions cannot be deleted
+prlt action delete implement
+# Error: Cannot delete built-in action
+```
+
+### Viewing Action Details
+
+```bash
+# Show full action configuration
+prlt action show security
+```
+
+**Example output:**
+
+```
+Action: security (Security Review)
+
+Description:
+  Comprehensive security audit of code changes
+
+Prompt:
+  Review code for security vulnerabilities:
+  - SQL injection
+  - XSS attacks
+  - Authentication bypasses
+  - Secrets in code
+  - Dependency vulnerabilities
+
+Suggested For: completed, started
+Move To: done
+Modifies Code: false
+Created: 2024-01-15
+```
+
+## Template Best Practices
+
+### Ticket Templates
+
+1. **Be specific but flexible** - Use placeholders for variable parts
+2. **Include acceptance criteria** - Clear success conditions
+3. **Break down subtasks** - Checklist for implementation steps
+4. **Use consistent naming** - "[Type] - Brief Description" format
+
+**Example Bug Template:**
+
+```markdown
+Title: Fix {component} {issue_type}
+
+Description:
+## Problem
+{Describe the issue}
+
+## Steps to Reproduce
+1. 
+2. 
+3. 
+
+## Expected Behavior
+{What should happen}
+
+## Actual Behavior
+{What actually happens}
+
+## Acceptance Criteria
+- [ ] Issue no longer reproduces
+- [ ] Existing functionality unaffected
+- [ ] Tests added for regression
+```
+
+### Action Templates
+
+1. **Clear instructions** - Be explicit about expectations
+2. **Include examples** - Show desired output format
+3. **Specify scope** - What files/areas to focus on
+4. **Set constraints** - Coding standards, patterns to follow
+
+**Example Action:**
+
+```markdown
+Name: API Endpoint
+
+Prompt:
+Implement REST API endpoint:
+
+1. Create route handler in src/routes/
+2. Add validation middleware
+3. Implement business logic
+4. Add error handling
+5. Write integration tests
+6. Update API documentation
+
+Follow patterns from existing endpoints.
+Use Zod for request validation.
+Return consistent error format.
+```
+
+## Template Workflows
+
+### New Feature Workflow
+
+```bash
+# 1. Create ticket from template
+prlt ticket template apply feature-request
+
+# 2. Groom ticket requirements
+prlt work start TKT-042 --action groom
+
+# 3. Implement feature
+prlt work start TKT-042 --action implement
+
+# 4. Review code
+prlt work start TKT-042 --action review
+```
+
+### Bug Fix Workflow
+
+```bash
+# 1. Create bug ticket from template
+prlt ticket template apply bug-report
+
+# 2. Implement fix
+prlt work start TKT-043 --action implement
+
+# 3. Security review
+prlt work start TKT-043 --action security
+```
+
+### Batch Creation
+
+```bash
+# Create multiple tickets from template
+for feature in "OAuth" "SAML" "LDAP"; do
+  prlt ticket template apply TPL-002 \
+    --title "Add $feature Integration"
+done
+```
+
+## JSON Mode
+
+Templates work with `--json` for automation:
+
+```bash
+# List templates (machine readable)
+prlt template list --json
+
+# Apply template non-interactively
+prlt ticket template apply TPL-001 --json \
+  --title "Fix login timeout"
+```
+
+## Related
+
+- [Tickets](/core/tickets) - Creating and managing tickets
+- [Work Commands](/core/work) - Using actions with work commands
+- [Custom Actions](/guides/custom-actions) - Advanced action patterns

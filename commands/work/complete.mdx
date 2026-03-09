@@ -1,0 +1,144 @@
+---
+title: prlt work complete
+description: Mark work as complete and move ticket to Done column
+---
+
+## Usage
+
+```bash
+prlt work complete [TICKET-ID] [OPTIONS]
+```
+
+Marks work as complete by moving the ticket to the Done column. Automatically terminates any running executions for the ticket and updates the board.
+
+## Arguments
+
+<ParamField path="TICKET-ID" type="string" optional>
+  Ticket ID to mark as complete. If omitted, displays an interactive dropdown to select from in-progress tickets.
+</ParamField>
+
+## Options
+
+<ParamField path="--project" type="string">
+  Filter tickets by project ID (only shows tickets from specified project in dropdown).
+</ParamField>
+
+<ParamField path="--json" type="boolean" default="false">
+  Output result as JSON for programmatic use.
+</ParamField>
+
+## Behavior
+
+1. **Status Transition**: Moves ticket from current status to Done column
+2. **Execution Cleanup**: Marks any running executions as completed
+3. **Analytics**: Tracks work completion metrics (duration, PR status)
+4. **Board Sync**: Auto-exports to `board.md` if configured
+
+## Column Configuration
+
+The "Done" column is configurable via workspace settings:
+
+```bash
+# Set custom Done column name
+prlt config set column_done "Completed"
+
+# View current setting
+prlt config get column_done
+```
+
+Default: `"Done"`
+
+## Examples
+
+### Interactive Mode
+
+```bash
+# Prompt to select in-progress ticket
+prlt work complete
+```
+
+### Direct Completion
+
+```bash
+# Mark specific ticket as complete
+prlt work complete TKT-001
+```
+
+### With Project Filter
+
+```bash
+# Complete ticket in specific project
+prlt work complete TKT-001 --project PROJ-123
+
+# Interactive with project filter
+prlt work complete --project PROJ-123
+```
+
+### JSON Output
+
+```bash
+# Get completion result as JSON
+prlt work complete TKT-001 --json
+```
+
+## Output
+
+```
+Work complete: TKT-001
+   Title: Implement user authentication
+   From: In Progress
+   To: Done
+   Execution exec_abc123 marked as completed
+```
+
+## Selection Criteria
+
+When running without a ticket ID, the command filters tickets to show only those eligible for completion:
+
+- Tickets with status category `started`
+- Tickets with status name containing "progress" (case-insensitive)
+- Optionally filtered by `--project` flag
+
+If no eligible tickets are found, displays: `"No in-progress work found."`
+
+## Execution Termination
+
+When marking work complete:
+
+1. Searches for running executions associated with the ticket
+2. Updates execution status from `running` to `completed`
+3. Records completion timestamp
+4. Calculates work duration for analytics
+5. Tracks whether a PR was created during the work session
+
+## Error Handling
+
+<ResponseField name="NOT_IN_WORKSPACE">
+  Command must be run from within a workspace. Run `prlt new` to create one.
+</ResponseField>
+
+<ResponseField name="TICKET_NOT_FOUND">
+  Specified ticket ID does not exist. Check ticket ID or run without arguments to select interactively.
+</ResponseField>
+
+<ResponseField name="COLUMN_NOT_FOUND">
+  Done column not found in board configuration. Configure with `prlt config set column_done <column-name>`.
+</ResponseField>
+
+<ResponseField name="NO_COMPLETABLE_WORK">
+  No in-progress work found (in JSON mode).
+</ResponseField>
+
+## Related Commands
+
+- [`prlt work start`](/commands/work/start) - Start work on a ticket
+- [`prlt work ready`](/commands/work/ready) - Mark work as ready for review (moves to Review column)
+- [`prlt work spawn`](/commands/work/spawn) - Batch spawn work for multiple tickets
+- [`prlt session attach`](/commands/session/attach) - Reattach to running session
+- [`prlt config set`](/commands/config/set) - Configure column names
+
+## See Also
+
+- [Workflow States](/concepts/workflow) - Understanding ticket status categories
+- [Execution Tracking](/concepts/executions) - How work sessions are tracked
+- [Board Configuration](/concepts/board) - Customizing board columns

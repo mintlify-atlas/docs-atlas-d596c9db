@@ -1,0 +1,428 @@
+---
+title: prlt project create
+description: Create a new project in your PMO workspace
+---
+
+Create a new project with a kanban board, spec folders, and workflow configuration.
+
+## Basic Usage
+
+### Interactive Mode
+
+Guided project creation with prompts:
+
+```bash
+prlt project create
+```
+
+You'll be prompted for:
+- **Project name**: Human-readable name
+- **Project ID**: Auto-generated slug or custom ID
+- **Description**: Optional project description
+- **Workflow template**: kanban, scrum, or custom
+
+Output:
+
+```
+Created project "Mobile App"
+  ID: mobile-app
+  Template: kanban
+  Statuses: Backlog → Ready → In Progress → Done
+  Board: pmo/projects/mobile-app/kanban.md
+  Specs: pmo/projects/mobile-app/specs/
+
+Switch to this project:
+  prlt ticket list --project mobile-app
+  prlt project view mobile-app
+```
+
+### Quick Creation
+
+Create with all options via flags:
+
+```bash
+prlt project create \
+  --name "Mobile App" \
+  --description "iOS and Android app" \
+  --template kanban
+```
+
+### From Argument
+
+Project name as positional argument:
+
+```bash
+prlt project create "Mobile App"
+```
+
+## Flags
+
+<ParamField path="--name" type="string" required>
+  Project name (human-readable)
+</ParamField>
+
+<ParamField path="-n" type="string">
+  Shorthand for --name
+</ParamField>
+
+<ParamField path="--id" type="string">
+  Custom project ID (auto-generated from name if not provided)
+</ParamField>
+
+<ParamField path="--description" type="string">
+  Project description
+</ParamField>
+
+<ParamField path="-d" type="string">
+  Shorthand for --description
+</ParamField>
+
+<ParamField path="--template" type="string" default="kanban">
+  Workflow template: kanban, scrum, custom
+</ParamField>
+
+<ParamField path="-t" type="string">
+  Shorthand for --template
+</ParamField>
+
+<ParamField path="--interactive" type="boolean" default="false">
+  Force interactive mode even when flags provided
+</ParamField>
+
+<ParamField path="-i" type="boolean">
+  Shorthand for --interactive
+</ParamField>
+
+<ParamField path="--dry-run" type="boolean" default="false">
+  Validate inputs without creating project
+</ParamField>
+
+<ParamField path="--json" type="boolean" default="false">
+  Output structured JSON for AI agents
+</ParamField>
+
+## Arguments
+
+<ParamField path="name" type="string">
+  Project name (alternative to --name flag)
+</ParamField>
+
+## Examples
+
+### Kanban Project
+
+Standard kanban workflow:
+
+```bash
+prlt project create \
+  --name "Backend API" \
+  --template kanban
+```
+
+Creates project with columns:
+- Backlog
+- Ready
+- In Progress
+- Done
+
+### Scrum Project
+
+Scrum workflow with sprints:
+
+```bash
+prlt project create \
+  --name "Frontend Redesign" \
+  --template scrum
+```
+
+Creates project with columns:
+- Backlog
+- Sprint Backlog
+- In Progress
+- Review
+- Done
+
+### Custom ID
+
+Specify custom project identifier:
+
+```bash
+prlt project create \
+  --name "Mobile App" \
+  --id MOBILE \
+  --template kanban
+```
+
+Tickets will use prefix: `MOBILE-001`, `MOBILE-002`, etc.
+
+### With Description
+
+Add context about the project:
+
+```bash
+prlt project create \
+  --name "Data Pipeline" \
+  --description "ETL pipeline for analytics data warehouse" \
+  --template kanban
+```
+
+### Dry Run
+
+Validate configuration without creating:
+
+```bash
+prlt project create \
+  --name "Test Project" \
+  --dry-run
+```
+
+Output:
+
+```
+[DRY RUN] Would create project:
+   ID: test-project
+   Name: Test Project
+   Template: kanban
+   Statuses: Backlog → Ready → In Progress → Done
+
+(No project was created)
+```
+
+### JSON Output
+
+For scripts and automation:
+
+```bash
+prlt project create \
+  --name "API v2" \
+  --json
+```
+
+Output:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "api-v2",
+    "name": "API v2",
+    "template": "kanban",
+    "statuses": ["Backlog", "Ready", "In Progress", "Done"],
+    "boardPath": "pmo/projects/api-v2/kanban.md",
+    "specsPath": "pmo/projects/api-v2/specs"
+  }
+}
+```
+
+## Workflow Templates
+
+### Kanban
+
+Continuous flow workflow:
+
+```bash
+--template kanban
+```
+
+**Columns**: Backlog → Ready → In Progress → Done
+
+**Use for**: Continuous delivery, support work, operational tasks
+
+### Scrum
+
+Sprint-based workflow:
+
+```bash
+--template scrum
+```
+
+**Columns**: Backlog → Sprint Backlog → In Progress → Review → Done
+
+**Use for**: Time-boxed iterations, product development
+
+### Custom
+
+Define your own workflow:
+
+```bash
+--template custom
+```
+
+Prompts for custom column names and order.
+
+## Project Structure
+
+Creating a project generates:
+
+```
+pmo/
+  projects/
+    {project-id}/
+      kanban.md          # Board file
+      specs/             # Specification files
+        draft/           # Draft specs
+        active/          # Active specs
+        completed/       # Completed specs
+```
+
+### kanban.md
+
+Markdown file containing the kanban board:
+
+```markdown
+# Mobile App
+
+## Backlog
+
+## Ready
+
+## In Progress
+
+## Done
+```
+
+### specs/
+
+Organized folders for specifications:
+- **draft/**: Specs in planning
+- **active/**: Specs being implemented
+- **completed/**: Finished specs
+
+## Auto-Generated IDs
+
+Project IDs are slugified from names:
+
+| Name | Generated ID |
+|------|-------------|
+| Mobile App | mobile-app |
+| Backend API v2 | backend-api-v2 |
+| User Dashboard | user-dashboard |
+| OAuth 2.0 Integration | oauth-2-0-integration |
+
+Override with `--id` flag:
+
+```bash
+prlt project create \
+  --name "OAuth 2.0 Integration" \
+  --id AUTH
+```
+
+## Validation
+
+### Duplicate Check
+
+Prevents creating projects with duplicate IDs:
+
+```bash
+prlt project create --name "Mobile App"
+# Error: Project "mobile-app" already exists.
+```
+
+### Required Fields
+
+Name is required for non-interactive mode:
+
+```bash
+prlt project create --template kanban
+# Interactive mode starts (no name provided)
+```
+
+### Dry Run Validation
+
+Test inputs before creating:
+
+```bash
+prlt project create \
+  --name "Existing Project" \
+  --dry-run --json
+```
+
+Returns validation errors:
+
+```json
+{
+  "dryRun": true,
+  "errors": [
+    {
+      "field": "id",
+      "error": "Project 'existing-project' already exists"
+    }
+  ]
+}
+```
+
+## Use Cases
+
+### New Product
+
+Start a new product project:
+
+```bash
+prlt project create \
+  --name "Mobile App v2" \
+  --description "Complete redesign of mobile experience" \
+  --template scrum
+```
+
+### Service Area
+
+Organize work by service:
+
+```bash
+prlt project create --name "Authentication Service"
+prlt project create --name "Payment Service"
+prlt project create --name "Notification Service"
+```
+
+### Client Work
+
+Separate projects per client:
+
+```bash
+prlt project create \
+  --name "Acme Corp Integration" \
+  --id ACME \
+  --description "Custom integrations for Acme Corp"
+```
+
+### Experimentation
+
+Sandbox for testing:
+
+```bash
+prlt project create \
+  --name "Experiments" \
+  --description "Testing new tools and approaches"
+```
+
+## Tips
+
+<Tip>
+Use descriptive project names. They appear in ticket lists and board headers.
+</Tip>
+
+<Tip>
+Custom IDs keep ticket references short: `AUTH-042` vs `oauth-2-0-integration-042`
+</Tip>
+
+<Tip>
+Dry run with --json to validate project configs in scripts before creation.
+</Tip>
+
+<Warning>
+Project IDs cannot be changed after creation. Choose carefully or use custom IDs.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Create Tickets" icon="plus" href="/commands/ticket/create">
+Add tickets to your new project
+</Card>
+
+<Card title="View Board" icon="table-columns" href="/commands/board/view">
+View your project kanban board
+</Card>
+
+</CardGroup>

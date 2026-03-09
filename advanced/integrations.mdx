@@ -1,0 +1,581 @@
+---
+title: 'External Integrations'
+description: 'Connect with GitHub, Linear, Jira, Asana, and Monday'
+---
+
+Proletariat integrates with external project management and issue tracking systems, enabling bidirectional workflows.
+
+## GitHub Integration
+
+GitHub integration enables automated PR creation and branch management.
+
+### Setup
+
+Install and authenticate GitHub CLI:
+
+```bash
+# Install gh CLI
+brew install gh
+
+# Authenticate
+gh auth login
+
+# Or use prlt helper
+prlt gh login
+```
+
+### Verify Authentication
+
+```bash
+# Check auth status
+gh auth status
+
+# Or via prlt
+prlt gh status
+```
+
+**Expected output:**
+
+```
+✓ Logged in to github.com as username
+✓ Git operations for github.com configured
+✓ Token: *******************
+```
+
+### GitHub Token
+
+Export token for API access and containers:
+
+```bash
+# Generate and export token
+export GITHUB_TOKEN=$(gh auth token)
+export GH_TOKEN=$(gh auth token)
+
+# Or use prlt helper
+prlt gh token
+```
+
+**Add to shell profile:**
+
+```bash
+# ~/.zshrc or ~/.bashrc
+export GITHUB_TOKEN=$(gh auth token)
+export GH_TOKEN=$(gh auth token)
+```
+
+### Creating Pull Requests
+
+**Automatic PR creation:**
+
+```bash
+# Create PR when work completes
+prlt work start TKT-001 --create-pr
+
+# Or set workspace default
+prlt config set execution.create_pr_default true
+```
+
+**Manual PR creation:**
+
+```bash
+# Create PR for ticket
+prlt pr create TKT-001
+
+# With custom title and body
+prlt pr create TKT-001 \
+  --title "Add OAuth Integration" \
+  --body "Implements OAuth 2.0 flow"
+```
+
+### PR Status
+
+```bash
+# Check PR status for ticket
+prlt pr status TKT-001
+
+# View PR URL
+prlt ticket view TKT-001
+# Shows linked PR URL
+```
+
+### Linking PRs
+
+```bash
+# Link existing PR to ticket
+prlt pr link TKT-001 https://github.com/org/repo/pull/123
+```
+
+## Linear Integration
+
+Linear integration enables bidirectional issue synchronization.
+
+### Setup
+
+**Generate API key:**
+
+1. Visit https://linear.app/settings/api
+2. Create Personal API Key
+3. Copy key (starts with `lin_api_`)
+
+**Connect to Linear:**
+
+```bash
+# Interactive setup
+prlt linear connect
+
+# With API key from environment
+export LINEAR_API_KEY=lin_api_...
+prlt linear connect
+
+# Specify default team
+prlt linear connect --team ENG
+```
+
+### Verify Connection
+
+```bash
+# Check connection status
+prlt linear status
+
+# Or verify during connect
+prlt linear connect --check
+```
+
+**Expected output:**
+
+```
+✓ Connected to YourOrg
+  User: Your Name (you@example.com)
+  Default team: ENG
+```
+
+### Importing Issues
+
+**Import specific issues:**
+
+```bash
+# Single issue
+prlt linear import ENG-123
+
+# Multiple issues
+prlt linear import ENG-123 ENG-124 ENG-125
+
+# Interactive picker
+prlt linear import
+```
+
+**Bulk import:**
+
+```bash
+# Import all active issues from default team
+prlt linear import --all --status "In Progress"
+
+# Import with filters
+prlt linear import --all \
+  --status "Todo" \
+  --status "In Progress" \
+  --label "backend"
+```
+
+**What gets imported:**
+
+- Title, description, status
+- Priority, labels, assignee
+- Subtasks (converted to checklist)
+- Metadata linking back to Linear
+
+**Duplicate prevention:**
+
+Linear issues can only be imported once. Mapping is tracked in the database.
+
+### Syncing Status
+
+Push PMO status changes back to Linear:
+
+```bash
+# Sync specific ticket
+prlt linear sync TKT-001
+
+# Sync all tickets with Linear links
+prlt linear sync --all
+```
+
+**Status mapping:**
+
+| PMO Status | Linear Status |
+|------------|---------------|
+| Backlog | Backlog |
+| Todo | Todo |
+| In Progress | In Progress |
+| In Review | In Review |
+| Done | Done |
+| Canceled | Canceled |
+
+### Working from Linear Issues
+
+Spawn agents directly from Linear issues:
+
+```bash
+# Start work from Linear issue
+prlt work start --from linear:ENG-123
+
+# With automatic PR creation
+prlt work start --from linear:ENG-123 --create-pr
+
+# Mirror to PMO ticket
+prlt work start --from linear:ENG-123 --mirror-to-pmo
+```
+
+**Batch spawn:**
+
+```bash
+# Spawn agents for multiple Linear issues
+prlt work spawn --from-linear \
+  --status "In Progress" \
+  --team ENG
+```
+
+### Attaching PRs to Linear
+
+Link GitHub PRs to Linear issues:
+
+```bash
+# Attach PR URL to Linear issue
+prlt linear attach ENG-123 \
+  https://github.com/org/repo/pull/456
+```
+
+### Active Work Source
+
+Set Linear as default issue source:
+
+```bash
+# Set active source
+prlt work source set linear
+
+# Now this uses Linear by default
+prlt work start --from-issue --key ENG-123
+```
+
+### Disconnecting
+
+```bash
+# Remove Linear credentials
+prlt linear connect --disconnect
+```
+
+## Jira Integration
+
+Jira integration follows the same patterns as Linear.
+
+### Setup
+
+**Generate API token:**
+
+1. Visit https://id.atlassian.com/manage-profile/security/api-tokens
+2. Create API token
+3. Note your Jira domain and email
+
+**Connect to Jira:**
+
+```bash
+# Interactive setup
+prlt jira connect
+
+# With environment variables
+export JIRA_DOMAIN=yourorg.atlassian.net
+export JIRA_EMAIL=you@example.com
+export JIRA_API_TOKEN=your_token
+prlt jira connect
+```
+
+### Verify Connection
+
+```bash
+# Check connection status
+prlt jira status
+
+# Test authentication
+prlt jira connect --check
+```
+
+### Importing Issues
+
+```bash
+# Import specific issue
+prlt jira import PROJ-123
+
+# Multiple issues
+prlt jira import PROJ-123 PROJ-124
+
+# Bulk import with JQL
+prlt jira import --jql "project=PROJ AND status='In Progress'"
+```
+
+### Working from Jira Issues
+
+```bash
+# Start work from Jira issue
+prlt work start --from jira:PROJ-123
+
+# With mirroring to PMO
+prlt work start --from jira:PROJ-123 --mirror-to-pmo
+
+# Batch spawn
+prlt work spawn --from-jira \
+  --jql "project=PROJ AND status='To Do'"
+```
+
+### Syncing Status
+
+```bash
+# Sync ticket status back to Jira
+prlt jira sync TKT-001
+
+# Sync all
+prlt jira sync --all
+```
+
+### JQL Queries
+
+Use Jira Query Language for advanced filtering:
+
+```bash
+# Complex JQL query
+prlt jira import --jql "project=PROJ AND 
+  status='In Progress' AND 
+  assignee=currentUser() AND 
+  priority=High"
+```
+
+## Asana Integration
+
+<Info>
+Asana integration is planned for a future release. Check the roadmap in the GitHub repository for updates.
+</Info>
+
+**Planned features:**
+
+- Import tasks from Asana projects
+- Sync task status bidirectionally
+- Spawn agents from Asana tasks
+- Link PRs to Asana tasks
+
+**Workaround:**
+
+Manually create PMO tickets from Asana tasks:
+
+```bash
+# Copy Asana task details
+prlt ticket create \
+  --title "Task from Asana" \
+  --description "Copied from Asana task" \
+  --metadata asana_url=https://app.asana.com/0/...
+```
+
+## Monday.com Integration
+
+<Info>
+Monday.com integration is planned for a future release. Check the roadmap in the GitHub repository for updates.
+</Info>
+
+**Planned features:**
+
+- Import items from Monday boards
+- Sync item status bidirectionally
+- Spawn agents from Monday items
+- Link PRs to Monday items
+
+**Workaround:**
+
+Manually create PMO tickets from Monday items:
+
+```bash
+# Copy Monday item details
+prlt ticket create \
+  --title "Item from Monday" \
+  --description "Copied from Monday item" \
+  --metadata monday_url=https://monday.com/boards/...
+```
+
+## External Issue Patterns
+
+### Unified Issue Reference
+
+Use `provider:key` format for consistency:
+
+```bash
+# Linear
+prlt work start --from linear:ENG-123
+
+# Jira
+prlt work start --from jira:PROJ-456
+
+# Future: Asana
+prlt work start --from asana:TASK-789
+```
+
+### Mirror to PMO
+
+Create local PMO tickets for external issues:
+
+```bash
+# One-time mirror
+prlt work start --from linear:ENG-123 --mirror-to-pmo
+
+# Set as default behavior
+export PRLT_MIRROR_TO_PMO_DEFAULT=true
+
+# Or via config
+prlt config set execution.mirror_to_pmo_default true
+```
+
+**Benefits of mirroring:**
+
+- Full PMO features (subtasks, acceptance criteria, specs)
+- Local tracking even if external system is unavailable
+- Unified reporting across all issue sources
+- Link multiple PRs to single ticket
+
+### Active Work Source
+
+Set default issue source for workspace:
+
+```bash
+# Set Linear as default
+prlt work source set linear
+
+# Now --from-issue uses Linear
+prlt work start --from-issue --key ENG-123
+
+# View active source
+prlt work source
+
+# Clear active source (back to manual selection)
+prlt work source set none
+```
+
+### Registered Sources
+
+View configured integrations:
+
+```bash
+# List all registered sources
+prlt work source list
+```
+
+**Example output:**
+
+```
+Registered Work Sources:
+
+* linear  - Linear (active)
+  jira    - Jira
+
+Use: prlt work source set <provider>
+```
+
+## Troubleshooting
+
+### GitHub Issues
+
+**gh not authenticated:**
+
+```bash
+# Re-authenticate
+gh auth logout
+gh auth login
+
+# Refresh token
+gh auth refresh
+```
+
+**PR creation fails:**
+
+```bash
+# Verify token has correct scopes
+gh auth status
+
+# Token needs: repo, workflow
+```
+
+### Linear Issues
+
+**Connection works but import returns no issues:**
+
+```bash
+# Check team access
+prlt linear status
+
+# List available teams
+prlt linear connect --check
+
+# Switch team
+prlt linear connect --team TEAM-KEY --force
+```
+
+**"Issue already imported":**
+
+Each Linear issue can only be imported once. To reimport:
+
+```bash
+# Find linked ticket
+prlt ticket list | grep ENG-123
+
+# Delete ticket (removes mapping)
+prlt ticket delete TKT-001
+
+# Reimport
+prlt linear import ENG-123
+```
+
+### Jira Issues
+
+**Authentication failed:**
+
+```bash
+# Verify credentials
+echo $JIRA_DOMAIN
+echo $JIRA_EMAIL
+echo $JIRA_API_TOKEN
+
+# Re-authenticate
+prlt jira connect --force
+```
+
+**JQL query returns no results:**
+
+```bash
+# Test JQL in Jira UI first
+# Filters → Advanced search → Paste query
+
+# Check project key
+prlt jira projects
+```
+
+## API Rate Limits
+
+**GitHub:**
+- Authenticated: 5,000 requests/hour
+- Unauthenticated: 60 requests/hour
+
+**Linear:**
+- 1,500 requests/hour
+- 90,000 requests/day
+
+**Jira:**
+- Varies by instance
+- Typically 1,000-10,000 requests/hour
+
+**Best practices:**
+
+- Use bulk operations instead of individual API calls
+- Cache results when possible
+- Implement exponential backoff for retries
+- Monitor rate limit headers
+
+## Related
+
+- [Work Commands](/core/work) - Using external issues with work start
+- [Ticket Management](/core/tickets) - Managing imported tickets
+- [External Issues Guide](/guides/external-issues) - Advanced workflows

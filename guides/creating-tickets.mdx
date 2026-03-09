@@ -1,0 +1,398 @@
+---
+title: Creating Tickets
+description: Best practices for writing effective tickets that agents can execute
+---
+
+Tickets are the primary way to communicate work requirements to agents. Well-written tickets lead to better outcomes.
+
+## Basic Ticket Creation
+
+### Interactive Mode
+
+For guided ticket creation:
+
+```bash
+prlt ticket create
+```
+
+You'll be prompted for:
+- **Title**: Clear, action-oriented summary
+- **Column**: Where to place the ticket (Backlog, Ready, etc.)
+- **Priority**: P0 (critical) through P3 (low)
+- **Category**: bug, feature, refactor, docs, etc.
+- **Description**: Structured outcome and acceptance criteria
+
+### Command-Line Flags
+
+For scripted or quick creation:
+
+```bash
+prlt ticket create \
+  --title "Add OAuth support" \
+  --description "Implement Google and GitHub OAuth" \
+  --priority P1 \
+  --category feature \
+  --column Backlog
+```
+
+### From File
+
+For complex descriptions:
+
+```bash
+prlt ticket create \
+  --title "Implement API rate limiting" \
+  --description-file ./specs/rate-limiting.md \
+  --category feature
+```
+
+## Structured Descriptions
+
+Proletariat tickets use a structured format that agents can parse:
+
+### What
+
+Describe the concrete outcome in one sentence:
+
+```markdown
+## What
+Add rate limiting middleware to protect API endpoints from abuse
+```
+
+### Done When
+
+List specific, testable acceptance criteria:
+
+```markdown
+## Done when
+- [ ] Rate limiter middleware is implemented
+- [ ] Endpoints return 429 status when limit exceeded
+- [ ] Redis stores rate limit counters
+- [ ] Rate limits are configurable per endpoint
+- [ ] Tests verify rate limiting behavior
+```
+
+<Tip>
+Use checkboxes (`- [ ]`) for acceptance criteria. Agents can mark them complete as they work.
+</Tip>
+
+### Context
+
+Provide relevant files, patterns, or hints:
+
+```markdown
+## Context
+- Use `express-rate-limit` package
+- See existing auth middleware in `src/middleware/auth.ts`
+- Rate limits should be configurable via env vars
+- Follow patterns from TKT-042 (similar middleware)
+```
+
+### Not in Scope
+
+Explicitly exclude related work:
+
+```markdown
+## Not in scope
+- User-specific rate limiting (separate ticket)
+- Rate limit dashboard (future work)
+- IP allowlisting (security team owns this)
+```
+
+## Ticket Properties
+
+### Title
+
+**Good titles** are:
+- Action-oriented: "Add", "Fix", "Refactor", "Update"
+- Specific: "Add OAuth support" not "Authentication work"
+- Concise: 3-8 words ideal
+
+**Examples:**
+
+<CodeGroup>
+
+```text Good
+Add Google OAuth integration
+Fix memory leak in image processor
+Refactor user authentication flow
+Update API docs for v2 endpoints
+```
+
+```text Avoid
+Authentication (too vague)
+Work on the login system (not action-oriented)
+Investigate and possibly fix the thing with users (unclear scope)
+```
+
+</CodeGroup>
+
+### Priority
+
+Use your workspace priority scale (default P0-P3):
+
+- **P0**: Production down, data loss, security breach
+- **P1**: Core feature broken, major bug, blocking other work
+- **P2**: Important but not urgent, minor bugs
+- **P3**: Nice-to-have, technical debt, small improvements
+
+### Category
+
+Categories align with conventional commits:
+
+**Standard categories:**
+- `feature` - New functionality
+- `bug` - Bug fixes
+- `refactor` - Code restructuring
+- `docs` - Documentation
+- `test` - Test additions/fixes
+- `chore` - Maintenance tasks
+- `performance` - Performance improvements
+
+**5Tool Founder categories:**
+- `ship` - Shipping and deployment
+- `growth` - Growth and marketing
+- `support` - Customer experience
+- `strategy` - Strategy and planning
+- `ops` - Business operations
+
+## Advanced Features
+
+### Link to Epic
+
+Group related tickets under an epic:
+
+```bash
+prlt ticket create \
+  --title "Add OAuth button to login page" \
+  --epic EPIC-001 \
+  --category feature
+```
+
+### Link to Spec
+
+Connect tickets to specifications:
+
+```bash
+prlt spec create --title "OAuth Authentication System"
+prlt ticket create --title "Implement Google OAuth" --spec SPEC-001
+```
+
+### Use Templates
+
+Create reusable ticket templates:
+
+```bash
+# Create a template
+prlt ticket template save bug-report
+
+# Use the template
+prlt ticket create --template bug-report
+```
+
+### Add Labels
+
+Tag tickets for filtering:
+
+```bash
+prlt ticket create \
+  --title "Add analytics tracking" \
+  --labels "frontend,analytics,p1"
+```
+
+### Custom IDs
+
+Specify custom ticket IDs:
+
+```bash
+prlt ticket create \
+  --id AUTH-042 \
+  --title "Add OAuth support"
+```
+
+## Bulk Operations
+
+Create multiple tickets at once:
+
+```bash
+prlt ticket bulk create --from-file tickets.yaml
+```
+
+Example `tickets.yaml`:
+
+```yaml
+tickets:
+  - title: Add Google OAuth
+    category: feature
+    priority: P1
+    epic: EPIC-001
+  - title: Add GitHub OAuth
+    category: feature
+    priority: P1
+    epic: EPIC-001
+  - title: Add OAuth docs
+    category: docs
+    priority: P2
+    epic: EPIC-001
+```
+
+## Writing for Agents
+
+### Be Specific
+
+Agents work best with clear, unambiguous instructions.
+
+<CodeGroup>
+
+```markdown Good
+## What
+Add a rate limiter that blocks requests after 100 requests per minute per IP
+
+## Done when
+- [ ] Middleware returns 429 status after 100 req/min
+- [ ] X-RateLimit headers are included in responses
+- [ ] Rate limit counters reset every 60 seconds
+```
+
+```markdown Avoid
+## What
+Make the API faster somehow
+
+## Done when
+- [ ] It works better
+```
+
+</CodeGroup>
+
+### Provide Examples
+
+Show concrete examples when possible:
+
+```markdown
+## What
+Add validation for user email addresses
+
+## Done when
+- [ ] Email validation uses regex: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
+- [ ] Invalid emails return 400 with error: "Invalid email format"
+- [ ] Valid examples: user@example.com, test+tag@domain.co.uk
+- [ ] Invalid examples: @example.com, user@, user@domain
+```
+
+### Reference Files
+
+Point agents to relevant code:
+
+```markdown
+## Context
+- Follow auth patterns in `src/middleware/auth.ts`
+- Update types in `src/types/user.ts`
+- Add tests to `tests/integration/auth.test.ts`
+- See similar implementation in TKT-042
+```
+
+## JSON Mode
+
+Create tickets from scripts or AI agents:
+
+```bash
+prlt ticket create --json
+```
+
+Returns machine-readable output:
+
+```json
+{
+  "success": true,
+  "ticket": {
+    "id": "TKT-042",
+    "title": "Add OAuth support",
+    "priority": "P1",
+    "category": "feature",
+    "statusName": "Backlog"
+  }
+}
+```
+
+## Managing Tickets
+
+### View Tickets
+
+```bash
+# List all tickets
+prlt ticket list
+
+# View specific ticket
+prlt ticket view TKT-042
+
+# View on board
+prlt board
+```
+
+### Move Tickets
+
+```bash
+prlt ticket move TKT-042 "In Progress"
+```
+
+### Edit Tickets
+
+```bash
+prlt ticket edit TKT-042
+```
+
+### Delete Tickets
+
+```bash
+prlt ticket delete TKT-042
+```
+
+### Link Tickets
+
+```bash
+# Block another ticket
+prlt ticket link block TKT-042 TKT-043
+
+# Relate tickets
+prlt ticket link relates TKT-042 TKT-044
+```
+
+## Best Practices
+
+<AccordionGroup>
+
+<Accordion title="One outcome per ticket">
+Tickets should have a single, clear outcome. If you find yourself writing "and" repeatedly, split into multiple tickets.
+</Accordion>
+
+<Accordion title="Make acceptance criteria testable">
+Every checkbox should be verifiable. "It works" is not testable. "Returns 200 status" is testable.
+</Accordion>
+
+<Accordion title="Provide enough context, not too much">
+Agents need relevant context but can get distracted by tangential information. Focus on what's needed for this specific ticket.
+</Accordion>
+
+<Accordion title="Use consistent categories">
+Stick to your team's category conventions. This helps with filtering and diet-balanced spawning.
+</Accordion>
+
+<Accordion title="Update tickets as you learn">
+If acceptance criteria change or new context emerges, update the ticket. Agents can access the latest version.
+</Accordion>
+
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Spawning Agents" icon="rocket" href="/guides/spawning-agents">
+Learn how to spawn agents to work on your tickets
+</Card>
+
+<Card title="Workflows" icon="diagram-project" href="/concepts/workflows">
+Understand how tickets flow through your process
+</Card>
+
+</CardGroup>

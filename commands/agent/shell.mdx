@@ -1,0 +1,299 @@
+---
+title: prlt agent shell
+description: Open an interactive shell in an agent workspace
+---
+
+Access an agent's workspace with Claude Code for manual interaction, debugging, or exploration.
+
+## Usage
+
+```bash
+prlt agent shell [agent-name]
+```
+
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `agent-name` | Name of the agent to open shell in (optional, prompts if not provided) |
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--machine` | Output in JSON format for programmatic use |
+
+## Examples
+
+### Open shell interactively
+
+```bash
+prlt agent shell
+```
+
+Prompts for:
+1. **Agent selection** - Choose from staff and temp agents
+2. **Environment** - devcontainer (recommended) or host
+3. **Display mode** - New terminal window or foreground
+4. **Permission mode** - Safe (with approvals) or danger (skip checks)
+
+```
+? Select agent to open shell in:
+  👔 altman
+  👔 bezos
+  ⏱️  bold-camry
+> ⏱️  keen-musk
+
+? Where should the shell run?
+> 🐳 devcontainer (recommended)
+  💻 host (agent worktree on your machine)
+
+? How should the shell be opened?
+> terminal     - New terminal window
+  foreground   - Run in current terminal
+
+? Permission mode for Claude Code:
+> 🔒 safe   - Requires approval for dangerous operations
+  ⚠️  danger - Skip permission checks
+
+🐚 Opening shell for agent: keen-musk
+
+✓ Container running: a1b2c3d4
+✓ Opened new terminal window
+```
+
+### Open shell for specific agent
+
+```bash
+prlt agent shell altman
+```
+
+Skips agent selection, prompts only for environment and execution options.
+
+### Open shell in foreground
+
+Runs Claude Code directly in your current terminal:
+
+```bash
+prlt agent shell bezos
+# Select "foreground" when prompted
+
+======================================
+Agent Shell: bezos (devcontainer)
+======================================
+
+Starting Claude Code in devcontainer...
+
+Welcome to Claude Code!
+> 
+```
+
+Press `Ctrl+D` or type `exit` to close the session.
+
+## Environment Options
+
+### Devcontainer (Recommended)
+
+Runs Claude Code inside the agent's isolated Docker container:
+
+- ✅ **Isolated** - Fully contained environment
+- ✅ **Consistent** - Same dependencies as autonomous work
+- ✅ **Safe** - No access to your host system
+- ⚠️ **Requires Docker** - Must have Docker running
+
+**Container lifecycle:**
+- Uses existing container if available
+- Starts stopped container automatically
+- Prompts to create container if missing (run `prlt work start` first)
+
+### Host
+
+Runs Claude Code directly on your machine in the agent's worktree:
+
+- ⚡ **Fast** - No container overhead
+- 🔍 **Direct** - Access to all local tools
+- ⚠️ **Shared state** - Uses your machine's environment
+- 📁 **Worktree access** - Direct git worktree on your filesystem
+
+## Display Modes
+
+### Terminal (New Window)
+
+Opens a new terminal window with Claude Code:
+
+- Keeps your current terminal free
+- Multiple agents can be open simultaneously
+- Session persists in separate window
+- Supports iTerm, Terminal, Ghostty, WezTerm, Kitty, Alacritty
+
+### Foreground (Current Terminal)
+
+Runs Claude Code in your active terminal:
+
+- Immediate interaction in current window
+- Blocks current terminal until exit
+- Useful for quick tasks
+- Exit with `Ctrl+D`
+
+## Permission Modes
+
+### Safe Mode (Recommended)
+
+Claude Code asks for approval before:
+- Deleting files or directories
+- Modifying git history
+- Running destructive commands
+- Making irreversible changes
+
+```bash
+# Claude will prompt:
+⚠️  This operation will delete files. Continue? (y/n)
+```
+
+### Danger Mode
+
+Skips all permission checks:
+- Use for trusted, well-scoped tasks
+- Faster workflow (no approvals)
+- **Caution**: Claude can make any change without asking
+
+Enabled with `--dangerously-skip-permissions` flag passed to Claude.
+
+## Existing Tmux Sessions
+
+If an agent has active tmux sessions (from `prlt work start`), you'll be warned:
+
+```
+⚠️  Agent "bold-camry" has 1 active tmux session(s):
+   • prlt-work-bold-camry-PRLT-456
+
+? What would you like to do?
+> 🔗 Attach to existing session
+  ⚠️  Open new shell anyway (may cause conflicts)
+  ❌ Cancel
+```
+
+**Attach to existing session** - Connects to running work session
+
+**Open new shell anyway** - Creates separate shell (may conflict with running work)
+
+**Cancel** - Exit without opening shell
+
+<Warning>
+  Opening multiple shells to the same agent can cause git conflicts or race conditions.
+  Prefer attaching to existing sessions when available.
+</Warning>
+
+## Navigation and Usage
+
+Once in the agent shell:
+
+### Explore the workspace
+
+```bash
+# List repositories
+ls repos/
+
+# Check git status
+cd repos/api
+git status
+git log
+
+# View current branch
+git branch
+```
+
+### Work with Claude
+
+```
+> help me debug the authentication error in api/src/auth.ts
+> run the test suite and fix any failures
+> show me what changes have been made
+```
+
+### Exit the shell
+
+- Type `exit` or press `Ctrl+D`
+- Terminal window closes (or returns to prompt in foreground mode)
+- Agent workspace remains intact
+
+## Workspace Structure
+
+Inside the agent workspace:
+
+```
+/workspace/              # Container workspace root (devcontainer)
+/workspace/repos/        # Git repositories (worktrees or clones)
+/workspace/.proletariat/ # Agent metadata and state
+
+# Or on host:
+~/dev/myproject/staff/altman/         # Agent workspace root
+~/dev/myproject/staff/altman/repos/   # Git repositories
+```
+
+## Common Use Cases
+
+### Debug a stuck agent
+
+```bash
+prlt agent shell bold-camry
+# Investigate logs, check git state, manually fix issues
+```
+
+### Review agent work before merging
+
+```bash
+prlt agent shell altman
+# Examine commits, run tests, verify changes
+```
+
+### Manually complete a task
+
+```bash
+prlt agent shell bezos
+# Take over from Claude, finish work, commit changes
+```
+
+### Experiment in isolated environment
+
+```bash
+prlt agent shell keen-musk
+# Try risky changes in temp agent workspace
+```
+
+## Troubleshooting
+
+### Docker not running
+
+```
+Error: Docker is not running. Please start Docker Desktop and try again.
+```
+
+**Solution**: Start Docker Desktop before using devcontainer mode.
+
+### Container must exist
+
+```
+Container is not running.
+
+Start the container first by running a work command:
+  prlt work start <ticket-id>
+
+Error: Container must exist. Run a work command first to create it.
+```
+
+**Solution**: Containers are created by work commands. Run `prlt work start` or `prlt work spawn` first.
+
+### No agents found
+
+```
+No agents found. Add agents with "prlt agent add"
+```
+
+**Solution**: Create agents with `prlt agent staff add` or `prlt staff add`.
+
+## Related Commands
+
+- [`prlt agent list`](/commands/agent/list) - View all agents and their status
+- [`prlt work start`](/commands/work/start) - Start autonomous work (creates container)
+- [`prlt agent staff add`](/commands/agent/staff#add) - Create new staff agents

@@ -1,0 +1,383 @@
+---
+title: prlt agent staff
+description: Manage persistent staff agents
+---
+
+Create and manage staff agents - permanent workspaces for long-term autonomous development.
+
+## Subcommands
+
+- [`prlt agent staff add`](#add) - Create new staff agents
+- [`prlt agent staff list`](#list) - List all staff agents
+- [`prlt agent staff remove`](#remove) - Remove staff agents
+
+---
+
+## add
+
+Create new staff (persistent) agents in your workspace.
+
+### Usage
+
+```bash
+prlt agent staff add [names...] [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `names` | Space-separated agent names (optional, prompts if not provided) |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--theme`, `-t` | Pick names from specific theme (billionaires, toyotas, companies) |
+| `--no-container` | Skip devcontainer setup (not recommended) |
+| `--clone` | Use git clone instead of worktree (more isolation, no real-time sync) |
+| `--machine` | Output in JSON format |
+
+### Examples
+
+#### Add agents from active theme
+
+```bash
+prlt agent staff add
+```
+
+Interactive selection from workspace's current theme:
+
+```
+? Select agents from Billionaires:
+  ◯ altman
+  ◉ bezos
+  ◉ gates
+  ◯ musk
+  ◉ zuck
+  ◯ Enter custom name(s)...
+
+✓ Successfully added 3 agent(s): bezos, gates, zuck
+  From theme: Billionaires
+  Devcontainer config created for isolated execution
+```
+
+#### Add agents by name
+
+```bash
+prlt agent staff add altman musk
+```
+
+Creates agents directly:
+
+```
+✓ Successfully added 2 agent(s): altman, musk
+  Devcontainer config created for isolated execution
+```
+
+#### Add from specific theme
+
+```bash
+prlt agent staff add --theme toyotas
+```
+
+Select from Toyota vehicle names:
+
+```
+? Select agent names from Toyota Garage:
+  ◉ camry
+  ◯ corolla
+  ◉ tacoma
+  ◯ tundra
+  ◉ 4runner
+
+✓ Successfully added 3 agent(s): camry, tacoma, 4runner
+  From theme: Toyota Garage
+  Devcontainer config created for isolated execution
+```
+
+#### Add without devcontainer
+
+```bash
+prlt agent staff add agent-1 --no-container
+```
+
+Creates agent workspace without Docker isolation:
+
+```
+✓ Successfully added 1 agent(s): agent-1
+```
+
+<Warning>
+  Using `--no-container` means agents run directly on your machine.
+  Recommended only for testing or non-autonomous workflows.
+</Warning>
+
+#### Add with git clone
+
+```bash
+prlt agent staff add research-agent --clone
+```
+
+Uses independent git clone instead of worktree:
+
+- ✅ Complete isolation from main repository
+- ✅ Can check out different commits/branches
+- ❌ No real-time sync with HQ
+- ❌ Uses more disk space
+
+### Available Themes
+
+#### Billionaires
+
+```bash
+prlt agent staff add --theme billionaires
+```
+
+Tech billionaires and founders:
+
+```
+altman, andreesen, ballmer, benioff, bezos, branson, brin, buffett,
+chesky, collison, cook, dalio, dario, dell, dorsey, durov, ellison,
+fink, gates, hastings, hoffman, horowitz, huang, jobs, kalanick,
+khosla, knight, levinson, ma, mcnealy, musk, nadella, neumann,
+omidyar, page, parker, pichai, sandberg, schmidt, schultz, siebel,
+silbermann, spiegel, sweeney, systrom, thiel, wozniak, yang, zuck
+```
+
+#### Toyotas
+
+```bash
+prlt agent staff add --theme toyotas
+```
+
+Reliable Toyota vehicles:
+
+```
+4runner, avalon, camry, celica, corolla, cressida, fj40, fj60,
+fj80, highlander, hilux, landcruiser, mr2, prius, rav4, sequoia,
+sienna, supra, tacoma, tercel, tundra, venza, yaris, auris, belta,
+brevis, caldina, carina, century, chaser, coaster, corona, cresta,
+crown, dyna, estima, etios, fortuner, granvia, harrier, innova,
+ipsum, kluger, levin, lite, lucida, mark2, matrix, mirai, noah,
+paseo, picnic, platz, previa, premio, probox, raize, rukus, sera,
+soarer, solara, starlet, surf, tarago, trueno, urban, verso, vios,
+vista, vitz, wish
+```
+
+#### Companies
+
+```bash
+prlt agent staff add --theme companies
+```
+
+Major tech companies:
+
+```
+adobe, airbnb, amazon, apple, atlassian, cisco, coinbase,
+databricks, discord, dropbox, figma, github, google, intel, meta,
+microsoft, netflix, notion, nvidia, openai, oracle, palantir,
+salesforce, shopify, slack, snowflake, spotify, square, stripe,
+tesla, twilio, twitter, uber, vercel, zoom, airtable, algolia,
+asana, auth0, brex, canva, carta, checkout, clickup, cloudera,
+contentful, datadog, deel, docusign, doordash, elastic, fastly,
+fivetran, gitlab, gusto, hashicorp, hubspot, instacart, klarna,
+launchdark, linear, loom, lyft, mailchimp, miro, monday, mongo,
+netlify, okta, pagerduty, plaid, postman, reddit, retool, revolut,
+rippling, robinhood, segment, sentry, supabase, toast, twitch,
+webflow, wiz, workday, zendesk, zscaler
+```
+
+#### Cracked Engineers
+
+```bash
+prlt agent staff add --theme cracked-engineers
+```
+
+AI researchers, engineers, and tech legends:
+
+```
+karpathy, lecun, sutskever, sinofsky, spolsky, torvalds, yegge,
+grove, kutcher, rabois, ross, fridman, hurd, iger, ive, levie,
+lynch, marcus, mayer, morin, powell, rometty, wales, wojcicki,
+zhang, zhong
+```
+
+### Custom Names
+
+When prompted, select "Enter custom name(s)..." to provide your own:
+
+```
+? Enter custom agent names (space-separated):
+> dev-1 research testing
+
+Normalized names:
+   dev-1 → dev-1 ✓
+   research → research ✓
+   testing → testing ✓
+
+✓ Successfully added 3 agent(s): dev-1, research, testing
+```
+
+Agent names must be:
+- Lowercase alphanumeric
+- Optional hyphens or underscores
+- Start with letter or number
+
+### Name Validation
+
+Invalid names are normalized or rejected:
+
+```bash
+prlt agent staff add "Agent 1" AGENT-2 agent_3
+
+Normalized names:
+   Agent 1 → agent-1
+   AGENT-2 → agent-2
+
+✓ Successfully added 3 agent(s): agent-1, agent-2, agent_3
+```
+
+### Staff vs Temp Agents
+
+| Feature | Staff (Persistent) | Temp (Ephemeral) |
+|---------|-------------------|------------------|
+| **Creation** | Manual via `prlt agent staff add` | Auto via `prlt work spawn` |
+| **Naming** | From themes or custom | Auto-generated (bold-bezos) |
+| **Lifetime** | Permanent until removed | Cleaned after work completes |
+| **Location** | `staff/` directory | `temp/` directory |
+| **Use case** | Long-term development | Single task execution |
+| **History** | Tracks completed tickets | No history |
+
+---
+
+## list
+
+List all staff (persistent) agents and their status.
+
+### Usage
+
+```bash
+prlt agent staff list
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--machine` | Output in JSON format |
+
+### Example Output
+
+```bash
+prlt agent staff list
+```
+
+```
+ Staff Agents:
+
+🟢 altman - Active
+   Branch: feature/auth
+   Repositories: 1 repo(s), commits ahead: api(+3)
+   Current tickets: PRLT-123
+   Completed: 5 ticket(s)
+
+🟢 bezos - Active
+   Branch: fix/database
+   Repositories: 2 repo(s), 1 dirty
+   No active tickets
+
+🔴 gates - Missing
+   Agent directory not found
+   Run "prlt staff add" to recreate
+
+Summary:
+   Total staff agents: 3
+   Active: 2
+   Inactive: 1
+   Tickets assigned: 1
+```
+
+### JSON Output
+
+```bash
+prlt agent staff list --machine
+```
+
+```json
+[
+  {
+    "name": "altman",
+    "exists": true,
+    "branch": "feature/auth",
+    "repositories": [
+      {
+        "name": "api",
+        "status": "clean",
+        "commitsAhead": 3
+      }
+    ],
+    "assignedTickets": ["PRLT-123"],
+    "completedTickets": ["PRLT-100", "PRLT-101"]
+  },
+  {
+    "name": "bezos",
+    "exists": true,
+    "branch": "fix/database",
+    "repositories": [
+      {
+        "name": "api",
+        "status": "dirty",
+        "commitsAhead": 0
+      },
+      {
+        "name": "frontend",
+        "status": "clean",
+        "commitsAhead": 1
+      }
+    ],
+    "assignedTickets": [],
+    "completedTickets": []
+  }
+]
+```
+
+---
+
+## remove
+
+Remove staff agents from the workspace.
+
+<Warning>
+  This command removes the agent workspace directory and all its contents.
+  Any uncommitted work will be lost. Ensure work is committed and pushed before removing.
+</Warning>
+
+### Usage
+
+```bash
+prlt agent staff remove [names...]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `names` | Space-separated agent names to remove (prompts if not provided) |
+
+### Examples
+
+```bash
+# Remove specific agents
+prlt agent staff remove gates zuck
+
+# Interactive selection
+prlt agent staff remove
+```
+
+## Related Commands
+
+- [`prlt agent list`](/commands/agent/list) - View all agents (staff and temp)
+- [`prlt agent shell`](/commands/agent/shell) - Open shell in agent workspace
+- [`prlt agent themes`](/commands/agent/themes) - Manage agent naming themes
+- [`prlt staff add`](/commands/staff/add) - Shorthand for `prlt agent staff add`

@@ -1,0 +1,423 @@
+---
+title: 'prlt ticket delete'
+description: 'Delete ticket(s) permanently'
+icon: 'trash'
+---
+
+Permanently delete tickets from the PMO system. This action cannot be undone.
+
+## Usage
+
+<CodeGroup>
+
+```bash Delete Specific Ticket
+prlt ticket delete TKT-001
+```
+
+```bash Interactive Selection
+prlt ticket delete
+```
+
+```bash Skip Confirmation
+prlt ticket delete TKT-001 --force
+```
+
+```bash Bulk Delete
+prlt ticket delete --bulk
+```
+
+</CodeGroup>
+
+## Arguments
+
+<ParamField path="ticketId" type="string">
+  Ticket ID to delete. If not provided, shows an interactive dropdown.
+  
+  ```bash
+  prlt ticket delete TKT-001
+  ```
+</ParamField>
+
+## Flags
+
+<ParamField path="--force" type="boolean" default="false">
+  Skip confirmation prompt.
+  
+  ```bash
+  prlt ticket delete TKT-001 --force
+  ```
+</ParamField>
+
+<ParamField path="--bulk" type="boolean" default="false">
+  Enable bulk mode to delete multiple tickets.
+  
+  ```bash
+  prlt ticket delete --bulk
+  ```
+</ParamField>
+
+<ParamField path="--project" type="string">
+  Project ID to filter tickets (for interactive selection).
+  
+  ```bash
+  prlt ticket delete --project mobile-app
+  ```
+</ParamField>
+
+<ParamField path="--json" type="boolean">
+  Output result as JSON.
+  
+  ```bash
+  prlt ticket delete TKT-001 --force --json
+  ```
+</ParamField>
+
+## Interactive Mode
+
+### Single Ticket Deletion
+
+When run without a ticket ID, displays a searchable dropdown:
+
+```
+? Select ticket to delete:
+  TKT-001 - Fix login bug (Backlog)
+  TKT-002 - Add dark mode (In Progress)
+  TKT-003 - Update docs (Backlog)
+```
+
+After selection, shows confirmation:
+
+```
+Delete ticket TKT-001?
+  Title: Fix login bug
+  Project: Mobile App
+  Status: Backlog
+
+? Are you sure?
+  No, cancel
+  Yes, delete
+```
+
+## Bulk Deletion
+
+Delete multiple tickets at once:
+
+```bash
+prlt ticket delete --bulk
+```
+
+Interactive flow:
+
+1. **Select tickets** with checkbox list
+2. **Review selection** with details
+3. **Confirm deletion**
+
+Output:
+```
+🗑️  Delete Multiple Tickets
+
+? Select tickets to DELETE:
+  ◉ TKT-001 - Fix login bug (Backlog)
+  ◉ TKT-002 - Add dark mode (In Progress)
+  ◯ TKT-003 - Update docs (Backlog)
+
+This will PERMANENTLY DELETE:
+  • TKT-001: Fix login bug
+  • TKT-002: Add dark mode
+
+? Are you sure? This cannot be undone.
+  No, cancel
+  Yes, DELETE tickets
+
+Deleted TKT-001
+Deleted TKT-002
+
+Deleted 2 ticket(s)
+```
+
+### Bulk Delete with Force
+
+Skip confirmation (use with caution):
+
+```bash
+prlt ticket delete --bulk --force
+```
+
+## Examples
+
+### Delete Specific Ticket
+
+```bash
+prlt ticket delete TKT-001
+```
+
+### Delete Without Confirmation
+
+```bash
+prlt ticket delete TKT-001 --force
+```
+
+### Interactive Selection
+
+```bash
+prlt ticket delete
+```
+
+### Bulk Delete
+
+```bash
+prlt ticket delete --bulk
+```
+
+### Bulk Delete Without Confirmation
+
+```bash
+prlt ticket delete --bulk --force
+```
+
+### Delete from Specific Project
+
+```bash
+prlt ticket delete --project mobile-app
+```
+
+### JSON Output
+
+```bash
+prlt ticket delete TKT-001 --force --json
+```
+
+## Output
+
+### Standard Output
+
+```
+✅ Ticket TKT-001 deleted
+   Removed from database and board
+```
+
+### JSON Output
+
+```json
+{
+  "success": true,
+  "message": "Deleted TKT-001"
+}
+```
+
+## What Gets Deleted
+
+Deleting a ticket removes:
+
+- ✅ Ticket record from database
+- ✅ Position on board
+- ✅ All subtasks
+- ✅ All acceptance criteria
+- ✅ Label associations
+- ✅ Epic associations
+- ✅ Spec associations
+- ✅ Blocked-by relationships
+- ✅ Custom metadata
+
+<Warning>
+  **This action is permanent.** Deleted tickets cannot be recovered. Consider archiving or moving to a "Cancelled" column instead if you might need the ticket history.
+</Warning>
+
+## Safety Features
+
+### Confirmation Prompt
+
+By default, the command asks for confirmation:
+
+```
+Delete ticket TKT-001?
+  Title: Fix login bug
+  Project: Mobile App
+  Status: Backlog
+
+? Are you sure?
+  No, cancel  ← Default selection
+  Yes, delete
+```
+
+The default is "No, cancel" to prevent accidental deletion.
+
+### Force Flag Warning
+
+The `--force` flag bypasses confirmation. Use it only in automated scripts or when you're certain:
+
+```bash
+# ⚠️ Skips confirmation - use carefully
+prlt ticket delete TKT-001 --force
+```
+
+### Bulk Deletion Safety
+
+Bulk mode shows all tickets to be deleted before proceeding:
+
+```
+This will PERMANENTLY DELETE:
+  • TKT-001: Fix login bug
+  • TKT-002: Add dark mode
+  • TKT-003: Update docs
+```
+
+## Common Use Cases
+
+<AccordionGroup>
+
+<Accordion title="Delete duplicate tickets">
+  Remove accidentally created duplicates:
+  
+  ```bash
+  prlt ticket delete TKT-005  # Duplicate of TKT-004
+  ```
+</Accordion>
+
+<Accordion title="Clean up test tickets">
+  Remove tickets created during testing:
+  
+  ```bash
+  prlt ticket delete --bulk
+  # Select all test tickets
+  ```
+</Accordion>
+
+<Accordion title="Remove obsolete work">
+  Delete tickets that are no longer relevant:
+  
+  ```bash
+  prlt ticket delete TKT-042 --force
+  ```
+</Accordion>
+
+<Accordion title="Bulk cleanup after project completion">
+  Remove all cancelled tickets:
+  
+  ```bash
+  # First, move unwanted tickets to a "Cancelled" column for review
+  prlt ticket move --bulk  # Move to Cancelled
+  
+  # Then delete them all at once
+  prlt ticket list --column Cancelled
+  prlt ticket delete --bulk
+  ```
+</Accordion>
+
+</AccordionGroup>
+
+## Alternatives to Deletion
+
+### Move to Cancelled Column
+
+Instead of deleting, move to a "Cancelled" column:
+
+```bash
+prlt ticket move TKT-001 Cancelled
+```
+
+Benefits:
+- ✅ Preserves ticket history
+- ✅ Can be restored if needed
+- ✅ Shows in reports as cancelled work
+
+### Archive Project
+
+Archive the entire project instead of deleting individual tickets:
+
+```bash
+prlt project archive mobile-app
+```
+
+### Edit to Update Status
+
+Update ticket description to mark as obsolete:
+
+```bash
+prlt ticket edit TKT-001 \
+  --description "OBSOLETE: Requirements changed, see TKT-005 instead"
+```
+
+## Error Handling
+
+### Ticket Not Found
+
+```bash
+prlt ticket delete INVALID-001
+# Error: Ticket "INVALID-001" not found.
+```
+
+### No Tickets Available
+
+```bash
+prlt ticket delete
+# (when no tickets exist)
+# Error: No tickets found.
+```
+
+### Partial Bulk Deletion Failure
+
+```bash
+prlt ticket delete --bulk
+# (some tickets fail to delete)
+
+Deleted TKT-001
+Failed to delete TKT-002: Ticket not found
+Deleted TKT-003
+
+Deleted 2 ticket(s)
+Failed to delete 1 ticket(s)
+```
+
+## Scripting Examples
+
+### Delete All P3 Tickets
+
+```bash
+#!/bin/bash
+for ticket in $(prlt ticket list --priority P3 --json | jq -r '.[].id'); do
+  prlt ticket delete $ticket --force
+done
+```
+
+### Delete Tickets Older Than 6 Months
+
+```bash
+#!/bin/bash
+SIX_MONTHS_AGO=$(date -d '6 months ago' -Iseconds)
+for ticket in $(prlt ticket list --json | jq -r ".[] | select(.createdAt < \"$SIX_MONTHS_AGO\") | .id"); do
+  prlt ticket delete $ticket --force
+done
+```
+
+### Conditional Deletion
+
+```bash
+#!/bin/bash
+if prlt ticket view TKT-001 --json | jq -e '.ticket.statusCategory == "canceled"' > /dev/null; then
+  prlt ticket delete TKT-001 --force
+  echo "Deleted cancelled ticket TKT-001"
+fi
+```
+
+## Related Commands
+
+<CardGroup cols={2}>
+
+<Card title="ticket list" icon="list" href="/commands/ticket/list">
+  List tickets before deletion
+</Card>
+
+<Card title="ticket view" icon="eye" href="/commands/ticket/view">
+  View ticket details before deleting
+</Card>
+
+<Card title="ticket move" icon="arrows-turn-right" href="/commands/ticket/move">
+  Move to Cancelled column instead
+</Card>
+
+<Card title="project list" icon="list" href="/commands/project/list">
+  View all projects
+</Card>
+
+</CardGroup>

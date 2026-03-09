@@ -1,0 +1,472 @@
+---
+title: prlt epic create
+description: Create a new epic to group related tickets
+---
+
+Create an epic to organize multiple related tickets into a larger initiative with progress tracking.
+
+## Basic Usage
+
+### Interactive Mode
+
+Guided epic creation:
+
+```bash
+prlt epic create
+```
+
+You'll be prompted for:
+- **Title**: Epic name
+- **Status**: active or draft
+- **Description**: Optional epic description
+- **Spec**: Link to design specification
+
+Output:
+
+```
+✅ Created epic EPIC-001 "User Authentication System"
+   Project: Mobile App
+   Status: active
+   Spec: SPEC-001
+   File: pmo/projects/mobile-app/epics/active/EPIC-001-user-authentication-system.md
+
+Next steps:
+  1. Edit the epic file to add details:
+     pmo/projects/mobile-app/epics/active/EPIC-001-user-authentication-system.md
+  2. Create tickets linked to this epic:
+     prlt ticket create --epic EPIC-001 "Design auth flow"
+  3. View progress: prlt epic progress EPIC-001
+```
+
+### Quick Creation
+
+Create with flags:
+
+```bash
+prlt epic create \
+  --title "User Authentication System" \
+  --status active
+```
+
+## Flags
+
+<ParamField path="--title" type="string" required>
+  Epic title (required for non-interactive mode)
+</ParamField>
+
+<ParamField path="-t" type="string">
+  Shorthand for --title
+</ParamField>
+
+<ParamField path="--status" type="string" default="active">
+  Initial status: active or draft
+</ParamField>
+
+<ParamField path="-s" type="string">
+  Shorthand for --status
+</ParamField>
+
+<ParamField path="--description" type="string">
+  Epic description
+</ParamField>
+
+<ParamField path="-d" type="string">
+  Shorthand for --description
+</ParamField>
+
+<ParamField path="--spec" type="string">
+  Link to spec ID (design document)
+</ParamField>
+
+<ParamField path="--project" type="string">
+  Project ID (prompts if not specified)
+</ParamField>
+
+<ParamField path="-P" type="string">
+  Shorthand for --project
+</ParamField>
+
+<ParamField path="--dry-run" type="boolean" default="false">
+  Validate inputs without creating epic
+</ParamField>
+
+<ParamField path="--json" type="boolean" default="false">
+  Output structured JSON for AI agents
+</ParamField>
+
+## Examples
+
+### Active Epic
+
+Create epic ready for work:
+
+```bash
+prlt epic create \
+  --title "OAuth Integration" \
+  --status active
+```
+
+### Draft Epic
+
+Create epic in planning phase:
+
+```bash
+prlt epic create \
+  --title "Mobile App Redesign" \
+  --status draft \
+  --description "Complete UI/UX overhaul"
+```
+
+### Link to Spec
+
+Connect epic to design document:
+
+```bash
+prlt spec create --title "Auth System Design"
+prlt epic create \
+  --title "User Authentication" \
+  --spec SPEC-001
+```
+
+### With Project
+
+Create in specific project:
+
+```bash
+prlt epic create \
+  --title "API Rate Limiting" \
+  --project backend-api
+```
+
+### Dry Run
+
+Validate without creating:
+
+```bash
+prlt epic create \
+  --title "Test Epic" \
+  --project mobile-app \
+  --dry-run
+```
+
+Output:
+
+```
+[DRY RUN] Would create epic:
+   Title: Test Epic
+   Project: Mobile App
+   Status: active
+
+(No epic was created)
+```
+
+### JSON Output
+
+For automation:
+
+```bash
+prlt epic create \
+  --title "Payment Integration" \
+  --json
+```
+
+Output:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "EPIC-002",
+    "title": "Payment Integration",
+    "project": "mobile-app",
+    "status": "active"
+  }
+}
+```
+
+## Epic Status
+
+### Active
+
+Epic is in active development:
+
+```bash
+prlt epic create --title "OAuth" --status active
+```
+
+**Characteristics:**
+- Ready for tickets to be created
+- Progress tracking enabled
+- File stored in `epics/active/`
+
+### Draft
+
+Epic is being planned:
+
+```bash
+prlt epic create --title "Redesign" --status draft
+```
+
+**Characteristics:**
+- Still in planning phase
+- Not ready for implementation
+- File stored in `epics/draft/`
+
+**Activate when ready:**
+
+```bash
+prlt epic activate EPIC-001
+```
+
+## Epic Files
+
+Creating an epic generates a markdown file:
+
+### File Location
+
+Based on epic status:
+
+**Active epic:**
+```
+pmo/projects/{project}/epics/active/EPIC-001-title.md
+```
+
+**Draft epic:**
+```
+pmo/projects/{project}/epics/draft/EPIC-001-title.md
+```
+
+### File Structure
+
+```markdown
+# User Authentication System
+
+**Epic ID**: EPIC-001
+**Status**: active
+**Spec**: SPEC-001
+
+## Overview
+
+Implement complete user authentication system with OAuth support.
+
+## Tickets
+
+- TKT-042: Design auth flow
+- TKT-043: Implement Google OAuth
+- TKT-044: Implement GitHub OAuth
+- TKT-045: Add session management
+
+## Progress
+
+Tracked automatically via linked tickets.
+```
+
+### Edit Epic File
+
+Add details, notes, and context:
+
+```bash
+vim pmo/projects/mobile-app/epics/active/EPIC-001-user-authentication-system.md
+```
+
+## Linking Tickets
+
+Create tickets linked to epic:
+
+```bash
+prlt ticket create \
+  --title "Design auth flow" \
+  --epic EPIC-001
+```
+
+Tickets automatically appear in epic:
+
+```bash
+prlt epic view EPIC-001
+```
+
+Output:
+
+```
+EPIC-001: User Authentication System
+Status: active
+Project: Mobile App
+Spec: SPEC-001
+
+Tickets (3):
+  TKT-042: Design auth flow [In Progress]
+  TKT-043: Implement Google OAuth [Backlog]
+  TKT-044: Implement GitHub OAuth [Backlog]
+
+Progress: 1/3 tickets done (33%)
+```
+
+## Spec Integration
+
+### Create Spec First
+
+```bash
+prlt spec create --title "Auth System Design"
+# Returns: SPEC-001
+
+prlt epic create \
+  --title "User Authentication" \
+  --spec SPEC-001
+```
+
+### Link Existing Spec
+
+```bash
+prlt epic create \
+  --title "Rate Limiting" \
+  --spec SPEC-005
+```
+
+### View Linked Spec
+
+```bash
+prlt spec view SPEC-001
+```
+
+## Progress Tracking
+
+Track epic completion:
+
+```bash
+prlt epic progress EPIC-001
+```
+
+Output:
+
+```
+EPIC-001: User Authentication System
+
+Progress: 2/5 tickets completed (40%)
+
+✅ Done (2):
+  TKT-042: Design auth flow
+  TKT-043: Implement Google OAuth
+
+⚡ In Progress (1):
+  TKT-044: Implement GitHub OAuth
+
+📝 Not Started (2):
+  TKT-045: Add session management
+  TKT-046: Add logout endpoint
+```
+
+## Validation
+
+### Spec Exists
+
+Spec must exist if provided:
+
+```bash
+prlt epic create \
+  --title "Test" \
+  --spec SPEC-999
+# Error: Spec not found: SPEC-999
+```
+
+### Dry Run Validation
+
+```bash
+prlt epic create \
+  --title "Test" \
+  --spec SPEC-999 \
+  --dry-run --json
+```
+
+Returns errors:
+
+```json
+{
+  "dryRun": true,
+  "errors": [
+    {
+      "field": "spec",
+      "error": "Spec not found: SPEC-999"
+    }
+  ]
+}
+```
+
+## Use Cases
+
+### Feature Rollout
+
+Organize multi-ticket features:
+
+```bash
+prlt epic create \
+  --title "OAuth Integration" \
+  --description "Add Google and GitHub OAuth"
+
+prlt ticket create --epic EPIC-001 --title "Design auth flow"
+prlt ticket create --epic EPIC-001 --title "Implement Google OAuth"
+prlt ticket create --epic EPIC-001 --title "Implement GitHub OAuth"
+prlt ticket create --epic EPIC-001 --title "Add session management"
+```
+
+### Refactoring Initiative
+
+Track large refactors:
+
+```bash
+prlt epic create \
+  --title "Database Migration" \
+  --description "Migrate from MongoDB to PostgreSQL"
+```
+
+### Customer Request
+
+Group related customer work:
+
+```bash
+prlt epic create \
+  --title "Acme Corp Integration" \
+  --project integrations
+```
+
+### Planning Phase
+
+Draft epics for future work:
+
+```bash
+prlt epic create \
+  --title "Mobile App v2" \
+  --status draft \
+  --description "Complete redesign - start Q3"
+```
+
+## Tips
+
+<Tip>
+Use draft status for epics that need design work before implementation.
+</Tip>
+
+<Tip>
+Link epics to specs for comprehensive documentation of large features.
+</Tip>
+
+<Tip>
+Break epics into 3-10 tickets. Larger epics should be split into multiple epics.
+</Tip>
+
+<Warning>
+Spec must exist before linking. Create the spec first with `prlt spec create`.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Create Tickets" icon="plus" href="/commands/ticket/create">
+Add tickets to your epic
+</Card>
+
+<Card title="View Board" icon="table-columns" href="/commands/board/view">
+Monitor epic progress on the board
+</Card>
+
+</CardGroup>

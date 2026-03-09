@@ -1,0 +1,193 @@
+---
+title: Introduction
+description: Agent orchestration platform for AI labor - Spin up workers on demand for multi-agent development
+---
+
+<img
+  className="block dark:hidden"
+  src="https://media.brand.dev/84315885-b1ac-4b52-9557-f71fc77e9c75.svg"
+  alt="Proletariat Logo"
+/>
+<img
+  className="hidden dark:block"
+  src="https://media.brand.dev/84315885-b1ac-4b52-9557-f71fc77e9c75.svg"
+  alt="Proletariat Logo"
+/>
+
+# Seize the means of production. Ship 100x.
+
+**Proletariat** is an agent orchestration platform for AI labor. Spin up workers on demand, coordinate multi-agent development from one CLI. Isolated workspaces, secure containers, persistent state.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get up and running in 5 minutes
+  </Card>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Install via Homebrew or npm
+  </Card>
+  <Card
+    title="Core Concepts"
+    icon="book"
+    href="/concepts/overview"
+  >
+    Learn about workspaces, tickets, and agents
+  </Card>
+  <Card
+    title="Command Reference"
+    icon="terminal"
+    href="/commands/overview"
+  >
+    Explore all available commands
+  </Card>
+</CardGroup>
+
+## Why Proletariat?
+
+<CardGroup cols={2}>
+  <Card title="Isolated" icon="code-branch">
+    Each agent gets its own git branch. No conflicts.
+  </Card>
+  <Card title="Secure" icon="shield">
+    Docker containers, sandboxed from your host.
+  </Card>
+  <Card title="Durable" icon="clock">
+    Tmux sessions persist. Close window, agent keeps working.
+  </Card>
+  <Card title="Trackable" icon="database">
+    One database, one CLI, all your agents.
+  </Card>
+  <Card title="Ephemeral" icon="bolt">
+    Spawn agents on demand. They work, they PR, they're done.
+  </Card>
+  <Card title="Structured" icon="list-check">
+    Tickets provide structured context, not freeform chat.
+  </Card>
+  <Card title="Persistent" icon="layer-group">
+    Tickets accumulate context over time. Hand off between agents.
+  </Card>
+  <Card title="Agent-native" icon="robot">
+    `--json` mode lets AI agents drive the CLI programmatically.
+  </Card>
+</CardGroup>
+
+## Quick Example
+
+```bash
+# Install
+brew install chrismcdermut/proletariat/prlt
+
+# Create workspace
+prlt new
+
+# Create a ticket
+prlt ticket create --title "Add OAuth" --category feature
+
+# Spawn an agent to work on it
+prlt work spawn
+```
+
+Agent spawns in its own branch, writes code, opens PR. You review and merge.
+
+## Key Features
+
+<AccordionGroup>
+  <Accordion title="Multi-Agent Orchestration">
+    Work on multiple tickets simultaneously. Each agent operates in its own isolated workspace with dedicated git branches. Scale to 50+ concurrent agents depending on your machine.
+  </Accordion>
+  
+  <Accordion title="Flexible Execution Modes">
+    Run agents in Docker containers for security or on the host for speed. Choose terminal display for watching progress or background mode for detached operation.
+  </Accordion>
+  
+  <Accordion title="Built-in MCP Server">
+    Includes a Model Context Protocol server with 100+ tools. Integrate with Claude Code, Cursor, and other AI clients.
+  </Accordion>
+  
+  <Accordion title="Themed Agent Naming">
+    Customize agent names with built-in themes: billionaires (musk, bezos, gates), toyotas (camry, supra, tacoma), or companies (stripe, vercel, linear). Create your own custom themes.
+  </Accordion>
+  
+  <Accordion title="Structured Workflow">
+    Manage projects, epics, tickets, and specs. Tickets flow through configurable workflows with phases and statuses. Track all work in one SQLite database.
+  </Accordion>
+  
+  <Accordion title="JSON Mode for AI Integration">
+    Every command supports `--json` flag for machine-readable output. AI agents can parse prompts, make selections, and drive the CLI autonomously.
+  </Accordion>
+</AccordionGroup>
+
+## Use Cases
+
+### Parallel Feature Development
+
+Spawn multiple agents to work on different features simultaneously:
+
+```bash
+prlt ticket create --title "Add OAuth" --category feature
+prlt ticket create --title "Add API rate limiting" --category feature
+prlt ticket create --title "Add email notifications" --category feature
+
+# Spawn all three in parallel
+prlt work spawn TKT-001 TKT-002 TKT-003 --mode docker
+
+# Watch the board as they work
+prlt board watch
+```
+
+### Bug Bash
+
+Process multiple bugs at once:
+
+```bash
+# Spawn all bugs from backlog
+prlt work spawn --all --column Backlog --category bug
+```
+
+### Code Review with Agents
+
+Have an agent review and refine ticket requirements:
+
+```bash
+prlt work start TKT-042 --action groom
+```
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card
+    title="Installation Guide"
+    icon="download"
+    href="/installation"
+  >
+    Install Proletariat via Homebrew or npm
+  </Card>
+  <Card
+    title="Quickstart Tutorial"
+    icon="play"
+    href="/quickstart"
+  >
+    Create your first workspace and spawn an agent
+  </Card>
+  <Card
+    title="Core Concepts"
+    icon="graduation-cap"
+    href="/concepts/overview"
+  >
+    Understand workspaces, tickets, agents, and workflows
+  </Card>
+  <Card
+    title="MCP Server Setup"
+    icon="server"
+    href="/mcp/setup"
+  >
+    Integrate with Claude Code and other AI clients
+  </Card>
+</CardGroup>

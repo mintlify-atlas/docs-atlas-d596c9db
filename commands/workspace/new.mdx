@@ -1,0 +1,227 @@
+---
+title: prlt new
+description: Create a new headquarters for managing repositories, agents, and projects
+---
+
+## Usage
+
+```bash
+prlt new [--json] [--name <name>] [--path <path>] [--agents <agents>] [--repos <repos>] [--pmo | --no-pmo]
+```
+
+## Description
+
+Creates a new HQ (headquarters) workspace for managing repositories, agents, and projects. The command supports both:
+
+- **Interactive mode** - Guided prompts for humans
+- **JSON mode** - Non-interactive for AI agents
+
+The new HQ includes:
+- Project management database (SQLite)
+- Directory structure for repos and agents
+- Configuration files
+- Registration in the machine config
+
+## Flags
+
+<ParamField path="--name" type="string" alias="-n">
+HQ name. Required in JSON mode. If not provided in interactive mode, you'll be prompted.
+</ParamField>
+
+<ParamField path="--path" type="string" alias="-p">
+HQ path. Defaults to `./{name}-hq` in the current directory.
+</ParamField>
+
+<ParamField path="--agents" type="string" alias="-a">
+Comma-separated list of agent names to create. Example: `--agents musk,bezos,gates`
+</ParamField>
+
+<ParamField path="--repos" type="string" alias="-r">
+Comma-separated list of repository paths to clone or move into the HQ.
+</ParamField>
+
+<ParamField path="--pmo" type="boolean" default="true">
+Include PMO (Project Management Org) setup with SQLite database and Kanban board.
+</ParamField>
+
+<ParamField path="--no-pmo" type="boolean">
+Disable PMO setup. Creates a minimal HQ without project management features.
+</ParamField>
+
+<ParamField path="--json" type="boolean" default="false">
+Run in non-interactive JSON mode for AI agent orchestration.
+</ParamField>
+
+<ParamField path="--machine" type="boolean" default="false">
+Alias for `--json`
+</ParamField>
+
+## Examples
+
+### Interactive mode (default)
+
+```bash
+prlt new
+```
+
+Walks you through:
+1. Choosing an HQ name
+2. Selecting agent naming theme (billionaires, toyotas, companies)
+3. Adding initial agents (optional)
+4. Adding repositories (optional)
+5. Configuring PMO setup
+
+### Quick create with name
+
+```bash
+prlt new --name my-project
+```
+
+Creates `./my-project-hq` with default settings.
+
+### Full custom setup
+
+```bash
+prlt new \
+  --name oauth-service \
+  --path ~/workspaces/oauth-hq \
+  --agents musk,bezos,gates \
+  --repos https://github.com/me/oauth-api,https://github.com/me/oauth-ui \
+  --pmo
+```
+
+### JSON mode for AI agents
+
+```bash
+prlt new --json --name my-project
+```
+
+Output (success):
+```json
+{
+  "success": true,
+  "hq": {
+    "name": "my-project",
+    "path": "/Users/you/my-project-hq",
+    "agents": [],
+    "repos": [],
+    "pmo": true
+  }
+}
+```
+
+Output (error - name taken):
+```json
+{
+  "success": false,
+  "error": "HQ name \"my-project\" is already in use on this machine. Pick another name."
+}
+```
+
+### Minimal HQ without PMO
+
+```bash
+prlt new --name simple-project --no-pmo
+```
+
+Creates a lightweight workspace without project management features.
+
+## HQ Directory Structure
+
+After creation, your HQ looks like:
+
+```
+my-project-hq/
+├── .proletariat/
+│   ├── config.json          # Workspace configuration
+│   └── workspace.db         # SQLite database (if --pmo)
+├── repos/                   # Your repositories
+│   ├── repo1/
+│   └── repo2/
+└── agents/                  # Agent workspaces
+    ├── staff/               # Named permanent agents
+    │   ├── musk/
+    │   ├── bezos/
+    │   └── gates/
+    └── temp/                # Ephemeral agents created by `work spawn`
+```
+
+## Workspace Config
+
+The `.proletariat/config.json` file stores:
+
+```json
+{
+  "name": "my-project",
+  "theme": {
+    "id": "billionaires",
+    "agents": ["musk", "bezos", "gates", "zuckerberg"]
+  },
+  "repos": [
+    "/Users/you/my-project-hq/repos/oauth-api",
+    "/Users/you/my-project-hq/repos/oauth-ui"
+  ],
+  "pmo": {
+    "enabled": true,
+    "boardName": "my-project-kanban",
+    "columns": ["Backlog", "In Progress", "Review", "Done"]
+  }
+}
+```
+
+## Agent Themes
+
+In interactive mode, choose from:
+
+- **billionaires** (default) - `musk`, `bezos`, `gates`, `zuckerberg`, `jobs`, `page`, `brin`, `buffett`
+- **toyotas** - `camry`, `supra`, `tacoma`, `tundra`, `highlander`, `rav4`, `corolla`
+- **companies** - `stripe`, `vercel`, `linear`, `notion`, `figma`, `slack`, `zoom`
+- **custom** - Provide your own comma-separated list
+
+<Tip>
+The billionaires theme is popular - finally put them to work for you!
+</Tip>
+
+## Exit Codes
+
+- `0` - HQ created successfully
+- `1` - Error:
+  - HQ name already in use
+  - Directory already exists
+  - Invalid path (inside a git repo)
+  - Failed to create directories or files
+
+## Validation
+
+The command validates:
+
+<Check>
+**HQ name uniqueness** - Each HQ must have a unique name on your machine
+</Check>
+
+<Check>
+**Path availability** - Target directory must not exist
+</Check>
+
+<Check>
+**No git nesting** - HQ cannot be created inside an existing git repository
+</Check>
+
+## Related Commands
+
+- [`prlt init`](/commands/workspace/init) - Initialize machine config
+- [`prlt workspace list`](/commands/workspace/list) - List all HQs
+- [`prlt workspace use`](/commands/workspace/use) - Switch active workspace
+- [`prlt repo add`](/commands/repo/add) - Add repos to existing HQ
+- [`prlt agent staff add`](/commands/agent/staff/add) - Add agents to existing HQ
+
+## Next Steps
+
+After creating your HQ:
+
+1. **Navigate to it**: `cd my-project-hq`
+2. **Create tickets**: `prlt ticket create`
+3. **Spawn agents**: `prlt work spawn`
+4. **View board**: `prlt board`
+
+See the [Quick Start guide](/quickstart) for a complete walkthrough.

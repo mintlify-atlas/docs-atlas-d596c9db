@@ -1,0 +1,419 @@
+---
+title: prlt execution list
+description: List running and recent agent work executions
+---
+
+Display all agent work executions with status, environment, and runtime information.
+
+## Basic Usage
+
+### List Recent Executions
+
+Show last 20 executions:
+
+```bash
+prlt execution list
+```
+
+Output:
+
+```
+🚀 Agent Work
+════════════════════════════════════════════════════════════════════════════════════════════════════════
+ID            Ticket    Agent      Env           Display      Perms    Status     Started
+────────────────────────────────────────────────────────────────────────────────────────────────────────
+WORK-023      TKT-042   alice      🐳 devcontainer  tmux        safe     running    5 min ago
+WORK-022      TKT-041   bob        💻 host         attached    safe     completed  1 hour ago
+WORK-021      TKT-040   charlie    🐳 devcontainer  tmux        auto     running    2 hours ago
+WORK-020      TKT-039   alice      💻 host         headless    safe     failed     3 hours ago
+WORK-019      TKT-038   bob        🐳 devcontainer  tmux        safe     stopped    1 day ago
+════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Commands:
+  prlt execution logs WORK-023    View logs
+  prlt execution stop WORK-023    Stop execution
+  prlt execution stop --all       Stop all running
+```
+
+## Flags
+
+<ParamField path="--status" type="string">
+  Filter by status: starting, running, completed, failed, stopped
+</ParamField>
+
+<ParamField path="-s" type="string">
+  Shorthand for --status
+</ParamField>
+
+<ParamField path="--agent" type="string">
+  Filter by agent name
+</ParamField>
+
+<ParamField path="-a" type="string">
+  Shorthand for --agent
+</ParamField>
+
+<ParamField path="--limit" type="integer" default="20">
+  Number of results to show
+</ParamField>
+
+<ParamField path="-l" type="integer">
+  Shorthand for --limit
+</ParamField>
+
+<ParamField path="--json" type="boolean" default="false">
+  Output structured JSON for AI agents
+</ParamField>
+
+## Examples
+
+### Running Executions
+
+Show only active work:
+
+```bash
+prlt execution list --status running
+```
+
+Output:
+
+```
+🚀 Agent Work
+════════════════════════════════════════════════════════════════════════════════════════════════════════
+ID            Ticket    Agent      Env           Display      Perms    Status     Started
+────────────────────────────────────────────────────────────────────────────────────────────────────────
+WORK-023      TKT-042   alice      🐳 devcontainer  tmux        safe     running    5 min ago
+WORK-021      TKT-040   charlie    🐳 devcontainer  tmux        auto     running    2 hours ago
+════════════════════════════════════════════════════════════════════════════════════════════════════════
+```
+
+### By Agent
+
+Show work for specific agent:
+
+```bash
+prlt execution list --agent alice
+```
+
+Output shows only alice's executions:
+
+```
+WORK-023      TKT-042   alice      🐳 devcontainer  tmux        safe     running    5 min ago
+WORK-020      TKT-039   alice      💻 host         headless    safe     failed     3 hours ago
+WORK-015      TKT-030   alice      🐳 devcontainer  tmux        safe     completed  2 days ago
+```
+
+### Failed Executions
+
+Find failed work:
+
+```bash
+prlt execution list --status failed
+```
+
+### More Results
+
+Show last 50 executions:
+
+```bash
+prlt execution list --limit 50
+```
+
+### Combined Filters
+
+Running work for specific agent:
+
+```bash
+prlt execution list \
+  --status running \
+  --agent alice
+```
+
+### JSON Output
+
+For scripts and monitoring:
+
+```bash
+prlt execution list --json
+```
+
+Output:
+
+```json
+[
+  {
+    "id": "WORK-023",
+    "ticketId": "TKT-042",
+    "agentName": "alice",
+    "environment": "devcontainer",
+    "displayMode": "tmux",
+    "permissionMode": "safe",
+    "status": "running",
+    "startedAt": "2024-03-09T14:30:00.000Z",
+    "containerId": "abc123def456",
+    "sessionId": "prlt-alice-work-023"
+  }
+]
+```
+
+## Execution Information
+
+Each execution displays:
+
+### ID
+
+Unique work identifier:
+```
+WORK-023
+```
+
+Use for logs and control:
+```bash
+prlt execution logs WORK-023
+prlt execution stop WORK-023
+```
+
+### Ticket
+
+Linked ticket being worked on:
+```
+TKT-042
+```
+
+View ticket details:
+```bash
+prlt ticket view TKT-042
+```
+
+### Agent
+
+Agent performing the work:
+```
+alice
+```
+
+Filter by agent:
+```bash
+prlt execution list --agent alice
+```
+
+### Environment
+
+Execution environment with icon:
+
+| Icon | Environment | Description |
+|------|-------------|-------------|
+| 🐳 | devcontainer | Docker container |
+| 💻 | host | Host machine |
+| 📦 | docker | Standalone container |
+
+### Display Mode
+
+How agent UI is shown:
+
+- **tmux**: Terminal multiplexer session
+- **attached**: Direct terminal attachment
+- **headless**: No UI, background only
+
+### Permission Mode
+
+Security level:
+
+- **safe**: Requires approval for commands (green)
+- **auto**: Automatic command execution (yellow)
+
+### Status
+
+Execution state with color:
+
+| Status | Color | Meaning |
+|--------|-------|----------|
+| starting | Yellow | Initializing |
+| running | Green | Active work |
+| completed | Gray | Finished successfully |
+| failed | Red | Error occurred |
+| stopped | Gray | Manually stopped |
+
+### Started
+
+When execution began:
+```
+5 min ago
+2 hours ago
+1 day ago
+```
+
+## Status Lifecycle
+
+### starting
+
+Execution is initializing:
+- Container starting
+- Environment setup
+- Agent launching
+
+**Next states**: running, failed
+
+### running
+
+Agent is actively working:
+- Processing ticket
+- Making changes
+- Running commands
+
+**Next states**: completed, failed, stopped
+
+### completed
+
+Work finished successfully:
+- Ticket requirements met
+- Changes committed
+- Execution exited cleanly
+
+**Terminal state**
+
+### failed
+
+Execution encountered error:
+- Container failed to start
+- Agent crashed
+- Runtime error
+
+View error:
+```bash
+prlt execution logs WORK-020
+```
+
+**Terminal state**
+
+### stopped
+
+Manually stopped:
+- User stopped execution
+- SIGTERM/SIGKILL sent
+- Tmux session killed
+
+**Terminal state**
+
+## Automatic Cleanup
+
+Stale executions are detected and marked stopped:
+
+**Checks performed:**
+- Tmux session exists
+- Container is running
+- Process is alive
+
+**Auto-updated** before listing to ensure accuracy.
+
+## Use Cases
+
+### Monitor Active Work
+
+Check what agents are doing:
+
+```bash
+prlt execution list --status running
+```
+
+### Debug Failed Work
+
+Find and investigate failures:
+
+```bash
+prlt execution list --status failed
+prlt execution logs WORK-020
+```
+
+### Agent Utilization
+
+See which agents are busy:
+
+```bash
+prlt execution list --status running
+```
+
+Output shows:
+- alice: 2 running
+- bob: 0 running
+- charlie: 1 running
+
+### Audit Trail
+
+Review historical work:
+
+```bash
+prlt execution list --limit 100 --json > audit.json
+```
+
+### Clean Up Stopped Work
+
+Find stopped executions:
+
+```bash
+prlt execution list --status stopped
+```
+
+Then clean up containers:
+```bash
+prlt docker clean
+```
+
+## Performance
+
+### Limit Results
+
+Faster queries with smaller limits:
+
+```bash
+prlt execution list --limit 10
+```
+
+### Filter Early
+
+Use status filter to reduce results:
+
+```bash
+prlt execution list --status running
+```
+
+### JSON for Processing
+
+Parse with jq for custom views:
+
+```bash
+prlt execution list --json | \
+  jq '.[] | select(.status == "running")'
+```
+
+## Tips
+
+<Tip>
+Run frequently to monitor agent progress during development sessions.
+</Tip>
+
+<Tip>
+Use `--status running` as a dashboard of active work across all agents.
+</Tip>
+
+<Tip>
+JSON output integrates with monitoring tools and custom dashboards.
+</Tip>
+
+<Warning>
+Execution list automatically cleans up stale executions, so running count reflects actual active work.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="View Logs" icon="file-lines" href="/commands/execution/logs">
+View execution logs and output
+</Card>
+
+<Card title="Stop Execution" icon="stop" href="/commands/execution/stop">
+Stop running executions
+</Card>
+
+</CardGroup>

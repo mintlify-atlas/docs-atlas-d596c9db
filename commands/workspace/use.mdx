@@ -1,0 +1,262 @@
+---
+title: prlt workspace use
+description: Set the active workspace
+---
+
+## Usage
+
+```bash
+prlt workspace use <name|path> [--json]
+```
+
+## Description
+
+Sets the active HQ workspace by name or path. The active workspace is used by all commands when you're outside an HQ directory.
+
+The command:
+1. Finds the workspace by name or path
+2. Validates it still exists and is a valid HQ
+3. Updates the machine config (`~/.proletariat/config.json`)
+4. Confirms the switch
+
+You can switch workspaces by:
+- **Name** - `prlt workspace use my-project`
+- **Path** - `prlt workspace use /Users/you/my-project-hq`
+
+## Arguments
+
+<ParamField path="nameOrPath" type="string" required>
+Workspace name or absolute path. If multiple workspaces have the same name, you'll be prompted to choose.
+</ParamField>
+
+## Flags
+
+<ParamField path="--json" type="boolean" default="false">
+Output in JSON format and handle prompts as JSON configs
+</ParamField>
+
+<ParamField path="--machine" type="boolean" default="false">
+Alias for `--json`
+</ParamField>
+
+## Examples
+
+### Switch by name
+
+```bash
+prlt workspace use my-project
+```
+
+Output:
+```
+Active workspace set to: my-project
+  Path: /Users/you/my-project-hq
+```
+
+### Switch by path
+
+```bash
+prlt workspace use /Users/you/oauth-hq
+```
+
+Output:
+```
+Active workspace set to: oauth-service
+  Path: /Users/you/oauth-hq
+```
+
+### Disambiguate duplicate names
+
+If multiple workspaces have the same name:
+
+```bash
+prlt workspace use my-project
+```
+
+Output:
+```
+Multiple workspaces found with name "my-project". Which workspace do you want to use?
+
+  1) my-project - /Users/you/projects/my-project-hq
+  2) my-project - /Users/you/backup/my-project-hq
+
+Select workspace: 
+```
+
+Select one and it activates.
+
+### JSON mode with duplicate names
+
+```bash
+prlt workspace use my-project --json
+```
+
+Output:
+```json
+{
+  "prompt": {
+    "type": "list",
+    "name": "selected",
+    "message": "Multiple workspaces found with name \"my-project\". Which workspace do you want to use?",
+    "choices": [
+      {
+        "name": "my-project - /Users/you/projects/my-project-hq",
+        "value": "/Users/you/projects/my-project-hq",
+        "command": "prlt workspace use \"/Users/you/projects/my-project-hq\" --json"
+      },
+      {
+        "name": "my-project - /Users/you/backup/my-project-hq",
+        "value": "/Users/you/backup/my-project-hq",
+        "command": "prlt workspace use \"/Users/you/backup/my-project-hq\" --json"
+      }
+    ]
+  },
+  "metadata": {
+    "command": "workspace use",
+    "flags": {}
+  }
+}
+```
+
+AI agents can select a choice and execute the `command` field.
+
+### Workspace not found
+
+```bash
+prlt workspace use nonexistent
+```
+
+Output:
+```
+Error: Workspace not found: nonexistent
+```
+
+Exit code: `1`
+
+### Path exists but not registered
+
+```bash
+prlt workspace use /Users/you/unregistered-hq
+```
+
+Output:
+```
+Workspace at "/Users/you/unregistered-hq" exists but is not registered.
+Run "prlt workspace add" to register it first, or specify a registered workspace.
+
+Registered workspaces:
+  - my-project (/Users/you/my-project-hq)
+  - oauth-service (/Users/you/oauth-hq)
+
+Error: Workspace not registered
+```
+
+Exit code: `1`
+
+### Stale workspace (path deleted)
+
+```bash
+prlt workspace use deleted-project
+```
+
+Output:
+```
+Error: Workspace path no longer exists: /Users/you/deleted-project-hq
+```
+
+Exit code: `1`
+
+<Warning>
+Run `prlt init` to clean up stale workspace entries.
+</Warning>
+
+## Workspace Resolution
+
+When you provide a name or path:
+
+1. **Try as path first** - Normalize and check if it matches a registered workspace path
+2. **Try as name** - Search registered workspaces by name
+3. **Multiple matches** - Prompt to disambiguate
+4. **No matches** - Check if path exists on disk but isn't registered
+
+## Validation
+
+Before switching, the command validates:
+
+<Check>
+**Path exists** - The workspace directory must exist on disk
+</Check>
+
+<Check>
+**Valid HQ** - Must have `.proletariat/` directory with valid structure
+</Check>
+
+<Check>
+**Registered** - Must be in the machine config registry
+</Check>
+
+## Active Workspace Behavior
+
+After setting the active workspace:
+
+- All commands use this workspace when run outside an HQ directory
+- Commands run inside an HQ directory always use that HQ (directory takes precedence)
+- The `PRLT_HQ_PATH` environment variable overrides the active workspace setting
+
+### Priority order:
+
+1. **PRLT_HQ_PATH** (highest)
+2. **Current directory** (if inside an HQ)
+3. **Machine config active workspace** (set by this command)
+
+## Exit Codes
+
+- `0` - Workspace switched successfully
+- `1` - Error:
+  - Workspace not found
+  - Workspace not registered
+  - Path no longer exists
+  - Path is not a valid HQ
+  - Multiple matches and user cancelled selection
+
+## Environment Variable Override
+
+<Note>
+If `PRLT_HQ_PATH` is set, it overrides the active workspace from the machine config. To respect the machine config setting, unset the variable:
+
+```bash
+unset PRLT_HQ_PATH
+```
+</Note>
+
+## Related Commands
+
+- [`prlt workspace list`](/commands/workspace/list) - List all workspaces
+- [`prlt workspace add`](/commands/workspace/add) - Register a workspace
+- [`prlt whoami`](/commands/whoami) - Show current active workspace
+- [`prlt new`](/commands/workspace/new) - Create new workspace
+
+## Tips
+
+<Tip>
+**Quick switching**: Use workspace names instead of paths for faster switching:
+```bash
+prlt workspace use my-project
+```
+</Tip>
+
+<Tip>
+**Tab completion**: If you have autocomplete enabled, workspace names and paths autocomplete:
+```bash
+prlt workspace use my-<TAB>
+```
+</Tip>
+
+<Tip>
+**Check current workspace**:
+```bash
+prlt whoami
+# or
+prlt workspace list | grep "(active)"
+```
+</Tip>
